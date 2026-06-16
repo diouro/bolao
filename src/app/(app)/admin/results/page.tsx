@@ -1,7 +1,9 @@
 import { AppShell } from "@/components/app-shell";
+import { Button } from "@/components/button";
 import { CountryFlag } from "@/components/country-flag";
 import { ResultForm } from "@/components/result-form";
 import { Badge, Card } from "@/components/ui";
+import { syncFinishedResults } from "@/app/(app)/admin/results/actions";
 import { requireAdmin } from "@/lib/auth";
 import { getAllMatches } from "@/lib/matches";
 import { resolveMatchSide } from "@/lib/tournament/resolve-slots";
@@ -20,17 +22,27 @@ export default async function AdminResultsPage() {
 
   return (
     <AppShell profile={profile} active="admin">
-      <div className="mb-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
-          Admin
-        </p>
-        <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
-          Enter final scores
-        </h1>
-        <p className="mt-2 text-zinc-600">
-          Save only the final match score. This marks the match as finished and
-          updates leaderboard and stats.
-        </p>
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
+            Admin
+          </p>
+          <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
+            Enter final scores
+          </h1>
+          <p className="mt-2 text-zinc-600">
+            Sync finished scores from the configured provider, or save a final
+            match score manually.
+          </p>
+        </div>
+        <form action={syncFinishedResults}>
+          <Button
+            className="bg-emerald-600 hover:bg-emerald-700"
+            pendingChildren="Syncing scores"
+          >
+            Sync finished scores
+          </Button>
+        </form>
       </div>
 
       <div className="grid gap-4">

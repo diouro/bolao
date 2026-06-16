@@ -33,3 +33,11 @@ export function getBootstrapAdminEmail() {
 export function getResultsProvider() {
   return readEnv("RESULTS_PROVIDER") || "manual";
 }
+
+export function getFootballDataApiToken() {
+  return readEnv("FOOTBALL_DATA_API_TOKEN");
+}
+
+export function getFootballDataSeason() {
+  return readEnv("FOOTBALL_DATA_SEASON") || "2026";
+}

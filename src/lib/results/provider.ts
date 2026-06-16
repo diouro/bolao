@@ -4,7 +4,14 @@ export type MatchResult = {
   awayScore: number;
 };
 
+export type SyncResultsSummary = {
+  provider: string;
+  checked: number;
+  updated: number;
+  skipped: number;
+};
+
 export interface ResultsProvider {
   getMatchResult(matchId: string): Promise<MatchResult | null>;
-  syncFinishedMatches?(): Promise<void>;
+  syncFinishedMatches?(): Promise<SyncResultsSummary>;
 }

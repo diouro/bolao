@@ -4,6 +4,7 @@ import { MatchCard } from "@/components/match-card";
 import { Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
 import { getMatchesWithUserPredictions } from "@/lib/matches";
+import { getPredictionLockMinutes } from "@/lib/predictions/settings";
 import type { MatchWithPrediction, TournamentRound } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,7 @@ export default async function PredictionsPage({
   const params = await searchParams;
   const profile = await requireProfile();
   const matches = await getMatchesWithUserPredictions(profile.id);
+  const lockMinutes = await getPredictionLockMinutes();
   const selectedCategory = normalizeCategory(params.group);
   const groupMatches =
     selectedCategory === "knockout"
@@ -69,9 +71,13 @@ export default async function PredictionsPage({
       <div className="space-y-6">
         <FixtureNavigation selectedCategory={selectedCategory} />
         {selectedCategory === "knockout" ? (
-          <KnockoutStage matches={knockoutMatches} />
+          <KnockoutStage matches={knockoutMatches} lockMinutes={lockMinutes} />
         ) : (
-          <GroupFixture group={selectedCategory} matches={groupMatches} />
+          <GroupFixture
+            group={selectedCategory}
+            matches={groupMatches}
+            lockMinutes={lockMinutes}
+          />
         )}
       </div>
     </AppShell>
@@ -126,9 +132,11 @@ function FixtureNavigation({
 function GroupFixture({
   group,
   matches,
+  lockMinutes,
 }: {
   group: string;
   matches: MatchWithPrediction[];
+  lockMinutes: number;
 }) {
   return (
     <section>
@@ -149,14 +157,20 @@ function GroupFixture({
       </Card>
       <div className="grid gap-4">
         {matches.map((match) => (
-          <MatchCard key={match.id} match={match} />
+          <MatchCard key={match.id} match={match} lockMinutes={lockMinutes} />
         ))}
       </div>
     </section>
   );
 }
 
-function KnockoutStage({ matches }: { matches: MatchWithPrediction[] }) {
+function KnockoutStage({
+  matches,
+  lockMinutes,
+}: {
+  matches: MatchWithPrediction[];
+  lockMinutes: number;
+}) {
   return (
     <section className="space-y-8">
       <Card className="bg-zinc-50/60">
@@ -187,7 +201,11 @@ function KnockoutStage({ matches }: { matches: MatchWithPrediction[] }) {
               </h3>
               <div className="grid gap-4">
                 {roundMatches.map((match) => (
-                  <MatchCard key={match.id} match={match} />
+                  <MatchCard
+                    key={match.id}
+                    match={match}
+                    lockMinutes={lockMinutes}
+                  />
                 ))}
               </div>
             </div>

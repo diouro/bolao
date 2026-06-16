@@ -38,6 +38,9 @@ Set:
 - `MIGRATION_DATABASE_URL` (or `POSTGRES_URL_NON_POOLING`, `DATABASE_URL`, `POSTGRES_URL`)
 - `PLATFORM_BASE_URL=http://localhost:3000`
 - `BOOTSTRAP_ADMIN_EMAIL=you@example.com`
+- `RESULTS_PROVIDER=football-data`
+- `FOOTBALL_DATA_API_TOKEN`
+- `FOOTBALL_DATA_SEASON=2026`
 
 The first matching `BOOTSTRAP_ADMIN_EMAIL` user is promoted to admin when they
 sign in. Admins can enter final match results at `/admin/results`.
@@ -55,22 +58,29 @@ npm run vercel:migrate:prod
 This uses `npx supabase db push --db-url "$MIGRATION_DATABASE_URL"`, so it does
 not require a globally installed Supabase CLI or a linked local project.
 
-You can also run the SQL manually from `supabase/migrations/001_initial.sql` in
-the Supabase SQL Editor, then run `npm run seed:fixtures`.
+You can also run the SQL manually from `supabase/migrations` in the Supabase SQL
+Editor, then run `npm run seed:fixtures`.
 
-## Fixture JSON
+## Fixtures
 
-World Cup data lives in `data/world-cup-2026.json`.
+World Cup fixtures are synced from football-data.org into the `matches` table.
 
-- Group-stage matches use FIFA country codes such as `BRA`, `USA`, and `MEX`.
-- Knockout matches use placeholders such as `{ "slot": "1A" }` or `{ "slot": "W R32-1" }`.
-- When teams qualify, replace placeholders with real team codes and run:
+Set:
+
+```bash
+FOOTBALL_DATA_API_TOKEN=your_token_here
+FOOTBALL_DATA_SEASON=2026
+```
+
+Then run:
 
 ```bash
 npm run seed:fixtures
 ```
 
-The app will then show flags and names instead of placeholders.
+The old JSON seed remains available as `npm run seed:fixtures:json`, but the API
+sync is the preferred source because it keeps fixture IDs, team names, kickoff
+times, and results aligned with the external provider.
 
 ## Scoring
 
@@ -79,6 +89,26 @@ The app will then show flags and names instead of placeholders.
 - Wrong result: 0 points
 
 Leaderboard tiebreakers are total points, exact hits, then earliest signup.
+
+Predictions lock 5 minutes before kickoff by default. To change the lock
+window, update the `prediction_lock_minutes` row in `app_settings`.
+
+## Result Sync
+
+The admin results page can sync finished scores from
+[football-data.org](https://www.football-data.org/client/register).
+
+Set these env vars in `.env.local` and `.env.production`:
+
+```bash
+RESULTS_PROVIDER=football-data
+FOOTBALL_DATA_API_TOKEN=your_token_here
+FOOTBALL_DATA_SEASON=2026
+```
+
+Then open `/admin/results` and click `Sync finished scores`. The sync updates
+`matches.home_score`, `matches.away_score`, and marks finished matches as
+`finished`.
 
 ## Useful Commands
 

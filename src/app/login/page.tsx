@@ -40,7 +40,7 @@ export default async function LoginPage({
               </p>
             </div>
             <div className="mt-10 rounded-2xl bg-white/10 p-4 text-sm text-zinc-200">
-              Predictions lock at kickoff. Only final scores count.
+              Predictions lock before kickoff. Only final scores count.
             </div>
           </Card>
 

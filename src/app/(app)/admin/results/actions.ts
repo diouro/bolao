@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth";
+import { createResultsProvider } from "@/lib/results";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const resultSchema = z.object({
@@ -32,6 +33,23 @@ export async function saveResult(formData: FormData) {
   if (error) {
     throw new Error(error.message);
   }
+
+  revalidatePath("/admin/results");
+  revalidatePath("/dashboard");
+  revalidatePath("/predictions");
+  revalidatePath("/leaderboard");
+  revalidatePath("/stats");
+}
+
+export async function syncFinishedResults() {
+  await requireAdmin();
+  const provider = createResultsProvider();
+
+  if (!provider.syncFinishedMatches) {
+    throw new Error("The configured results provider does not support syncing.");
+  }
+
+  await provider.syncFinishedMatches();
 
   revalidatePath("/admin/results");
   revalidatePath("/dashboard");

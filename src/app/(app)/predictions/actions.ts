@@ -3,6 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
+import {
+  formatPredictionLockLabel,
+  isPredictionLocked,
+} from "@/lib/predictions/lock";
+import { getPredictionLockMinutes } from "@/lib/predictions/settings";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const predictionSchema = z.object({
@@ -30,8 +35,17 @@ export async function savePrediction(formData: FormData) {
     throw new Error(matchError.message);
   }
 
-  if (new Date(match.kickoff_at).getTime() <= Date.now()) {
-    throw new Error("Predictions are locked after kickoff.");
+  const lockMinutes = await getPredictionLockMinutes();
+
+  if (
+    isPredictionLocked({
+      kickoffAt: match.kickoff_at,
+      lockMinutes,
+    })
+  ) {
+    throw new Error(
+      `Predictions are locked ${formatPredictionLockLabel(lockMinutes)}.`,
+    );
   }
 
   const { error } = await supabase.from("predictions").upsert({

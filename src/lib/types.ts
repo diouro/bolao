@@ -56,6 +56,8 @@ export type Match = {
   group_code: string | null;
   home_team_code: string | null;
   away_team_code: string | null;
+  home_team_name: string | null;
+  away_team_name: string | null;
   home_slot: string | null;
   away_slot: string | null;
   kickoff_at: string;
@@ -63,6 +65,10 @@ export type Match = {
   status: MatchStatus;
   home_score: number | null;
   away_score: number | null;
+  external_provider: string | null;
+  external_match_id: string | null;
+  external_home_team_id: string | null;
+  external_away_team_id: string | null;
 };
 
 export type Prediction = {

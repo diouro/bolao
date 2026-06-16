@@ -3,12 +3,14 @@ import { MatchCard } from "@/components/match-card";
 import { Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
 import { getMatchesWithUserPredictions } from "@/lib/matches";
+import { getPredictionLockMinutes } from "@/lib/predictions/settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const profile = await requireProfile();
   const matches = await getMatchesWithUserPredictions(profile.id);
+  const lockMinutes = await getPredictionLockMinutes();
   const nowMs = new Date().getTime();
   const upcoming = matches
     .filter((match) => new Date(match.kickoff_at).getTime() > nowMs)
@@ -28,8 +30,8 @@ export default async function DashboardPage() {
           Your next predictions
         </h1>
         <p className="mt-2 text-zinc-600">
-          Predict scores before kickoff. Results and points appear after admins
-          enter final scores.
+          Predict scores before the lock window closes. Results and points
+          appear after admins enter final scores.
         </p>
       </div>
 
@@ -44,7 +46,9 @@ export default async function DashboardPage() {
 
       <div className="grid gap-4">
         {upcoming.length > 0 ? (
-          upcoming.map((match) => <MatchCard key={match.id} match={match} />)
+          upcoming.map((match) => (
+            <MatchCard key={match.id} match={match} lockMinutes={lockMinutes} />
+          ))
         ) : (
           <Card>
             <p className="font-semibold text-zinc-950">No upcoming matches.</p>
