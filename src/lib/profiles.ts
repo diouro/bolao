@@ -14,15 +14,20 @@ export async function getMentionableUsers(): Promise<MentionableUser[]> {
 
   return ((data ?? []) as Profile[]).map((profile) => {
     const label = profile.display_name || profile.email;
-    const emailHandle = profile.email.split("@")[0] || "friend";
-    const handle = label.replace(/[^a-zA-Z0-9_]/g, "") || emailHandle;
 
     return {
       id: profile.id,
       label,
-      handle,
+      handle: getMentionHandle(profile),
       email: profile.email,
       has_paid: profile.has_paid,
     };
   });
+}
+
+export function getMentionHandle(profile: Pick<Profile, "display_name" | "email">) {
+  const label = profile.display_name || profile.email;
+  const emailHandle = profile.email.split("@")[0] || "friend";
+
+  return label.replace(/[^a-zA-Z0-9_]/g, "") || emailHandle;
 }

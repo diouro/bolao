@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   BarChart3,
+  Bell,
   Check,
   ListChecks,
   LogOut,
@@ -11,6 +12,9 @@ import {
 } from "lucide-react";
 import { logout } from "@/app/actions";
 import { Button } from "@/components/button";
+import { MentionNavBadge } from "@/components/mention-nav-badge";
+import { getMentionLogs } from "@/lib/mentions";
+import { getMentionHandle } from "@/lib/profiles";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
 
@@ -20,10 +24,13 @@ const navItems = [
   { key: "leaderboard", label: "Leaderboard", href: "/leaderboard", icon: BarChart3 },
   { key: "breakdown", label: "Breakdown", href: "/breakdown", icon: ListChecks },
   { key: "chat", label: "Chat", href: "/chat", icon: MessageCircle },
+  { key: "mentions", label: "Mentions", href: "/mentions", icon: Bell },
   { key: "stats", label: "Stats", href: "/stats", icon: BarChart3 },
 ];
 
-export function AppShell({
+const mobileNavItems = navItems.filter((item) => item.key !== "mentions");
+
+export async function AppShell({
   profile,
   active,
   children,
@@ -35,13 +42,17 @@ export function AppShell({
     | "leaderboard"
     | "breakdown"
     | "chat"
+    | "mentions"
     | "stats"
     | "admin";
   children: ReactNode;
 }) {
+  const mentionCount = (await getMentionLogs(profile)).length;
+  const mentionHandle = getMentionHandle(profile);
+
   return (
     <main className="min-h-screen bg-zinc-100 lg:grid lg:grid-cols-[260px_1fr]">
-      <aside className="hidden border-r border-zinc-200 bg-white lg:flex lg:flex-col">
+      <aside className="hidden border-r border-zinc-200 bg-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
         <div className="border-b border-zinc-200 p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-600 text-white">
@@ -55,13 +66,22 @@ export function AppShell({
             </div>
           </div>
         </div>
-        <nav className="flex-1 space-y-1 p-4">
+        <nav className="flex-1 space-y-1 overflow-y-auto p-4">
           {navItems.map((item) => (
             <NavItem
               key={item.key}
               href={item.href}
               active={active === item.key}
               icon={<item.icon className="h-4 w-4" />}
+              badge={
+                item.key === "mentions" ? (
+                  <MentionNavBadge
+                    initialCount={mentionCount}
+                    handle={mentionHandle}
+                    currentUserId={profile.id}
+                  />
+                ) : null
+              }
             >
               {item.label}
             </NavItem>
@@ -130,7 +150,7 @@ export function AppShell({
       </section>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-zinc-200 bg-white lg:hidden">
-        {navItems.map((item) => (
+        {mobileNavItems.map((item) => (
           <Link
             key={item.key}
             href={item.href}
@@ -164,11 +184,13 @@ function NavItem({
   href,
   active,
   icon,
+  badge,
   children,
 }: {
   href: string;
   active: boolean;
   icon: ReactNode;
+  badge?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -180,7 +202,8 @@ function NavItem({
       )}
     >
       {icon}
-      {children}
+      <span className="min-w-0 flex-1 truncate">{children}</span>
+      {badge}
     </Link>
   );
 }

@@ -47,12 +47,15 @@ export function ChatRoom({
   const [hasMore, setHasMore] = useState(
     initialMessages.length === CHAT_MESSAGES_PAGE_SIZE,
   );
+  const [onlineCount, setOnlineCount] = useState(1);
   const [realtimeStatus, setRealtimeStatus] =
     useState<RealtimeStatus>("connecting");
   const scrollRef = useRef<HTMLDivElement>(null);
   const topSentinelRef = useRef<HTMLDivElement>(null);
+  const bottomSentinelRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const didInitialScrollRef = useRef(false);
+  const shouldStickToBottomRef = useRef(true);
   const activeMention = getActiveMention(body, caretPosition);
 
   const timeFormatter = useMemo(
@@ -124,6 +127,7 @@ export function ChatRoom({
   );
 
   const mergeMessages = useCallback((incoming: ChatMessageWithAuthor[]) => {
+    shouldStickToBottomRef.current = isNearBottom(scrollRef.current);
     setMessages((current) => {
       const byId = new Map(current.map((message) => [message.id, message]));
 
@@ -204,6 +208,8 @@ export function ChatRoom({
     setIsSending(true);
     setError(null);
 
+    shouldStickToBottomRef.current = true;
+
     const { error: insertError } = await supabase.from("chat_messages").insert({
       user_id: currentUserId,
       body: trimmed,
@@ -245,7 +251,13 @@ export function ChatRoom({
 
   useEffect(() => {
     const channel = supabase
-      .channel("chat-room")
+      .channel("chat-room", {
+        config: {
+          presence: {
+            key: currentUserId,
+          },
+        },
+      })
       .on(
         "postgres_changes",
         {
@@ -267,14 +279,24 @@ export function ChatRoom({
           }
         },
       )
+      .on("presence", { event: "sync" }, () => {
+        setOnlineCount(Object.keys(channel.presenceState()).length);
+      })
       .subscribe((status) => {
         setRealtimeStatus(status === "SUBSCRIBED" ? "live" : "connecting");
+
+        if (status === "SUBSCRIBED") {
+          void channel.track({
+            user_id: currentUserId,
+            online_at: new Date().toISOString(),
+          });
+        }
       });
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [hydrateMessages, mergeMessages, supabase]);
+  }, [currentUserId, hydrateMessages, mergeMessages, supabase]);
 
   useEffect(() => {
     if (realtimeStatus === "live") {
@@ -294,8 +316,27 @@ export function ChatRoom({
     }
 
     didInitialScrollRef.current = true;
+    const target = window.location.hash
+      ? document.getElementById(window.location.hash.slice(1))
+      : null;
+
+    if (target) {
+      target.scrollIntoView({ block: "center" });
+      return;
+    }
+
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, []);
+
+  useEffect(() => {
+    if (!shouldStickToBottomRef.current) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      bottomSentinelRef.current?.scrollIntoView({ block: "end" });
+    });
+  }, [messages.length]);
 
   useEffect(() => {
     const sentinel = topSentinelRef.current;
@@ -333,16 +374,21 @@ export function ChatRoom({
               : "Reconnecting, checking every 10 seconds"}
           </p>
         </div>
-        <span
-          className={cn(
-            "rounded-full px-3 py-1 text-xs font-bold",
-            realtimeStatus === "live"
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-amber-50 text-amber-700",
-          )}
-        >
-          {realtimeStatus === "live" ? "Live" : "Polling"}
-        </span>
+        <div className="flex flex-wrap justify-end gap-2">
+          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+            {onlineCount} online
+          </span>
+          <span
+            className={cn(
+              "rounded-full px-3 py-1 text-xs font-bold",
+              realtimeStatus === "live"
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-amber-50 text-amber-700",
+            )}
+          >
+            {realtimeStatus === "live" ? "Live" : "Polling"}
+          </span>
+        </div>
       </div>
 
       <div
@@ -375,6 +421,7 @@ export function ChatRoom({
             No messages yet. Start the pool chat.
           </div>
         )}
+        <div ref={bottomSentinelRef} />
       </div>
 
       {error && (
@@ -465,7 +512,10 @@ function ChatBubble({
   time: string;
 }) {
   return (
-    <div className={cn("flex", isOwn ? "justify-end" : "justify-start")}>
+    <div
+      id={`message-${message.id}`}
+      className={cn("scroll-mt-24 flex", isOwn ? "justify-end" : "justify-start")}
+    >
       <div
         className={cn(
           "max-w-[85%] rounded-3xl px-4 py-3 shadow-sm sm:max-w-[70%]",
@@ -519,4 +569,15 @@ function getActiveMention(value: string, caretPosition: number): ActiveMention |
     start: match.index + match[1].length,
     query: match[2],
   };
+}
+
+function isNearBottom(element: HTMLDivElement | null) {
+  if (!element) {
+    return true;
+  }
+
+  const distanceFromBottom =
+    element.scrollHeight - element.scrollTop - element.clientHeight;
+
+  return distanceFromBottom < 120;
 }

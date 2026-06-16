@@ -12,6 +12,7 @@ const protectedPrefixes = [
   "/leaderboard",
   "/breakdown",
   "/chat",
+  "/mentions",
   "/stats",
   "/admin",
 ];

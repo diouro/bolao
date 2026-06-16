@@ -24,9 +24,6 @@ export default async function ChatPage() {
         <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
           Pool chat room
         </h1>
-        <p className="mt-2 text-zinc-600">
-          Talk trash, celebrate points, and keep the group banter in one place.
-        </p>
       </div>
 
       <ChatRoom

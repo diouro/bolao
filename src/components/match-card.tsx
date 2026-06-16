@@ -60,7 +60,8 @@ export function MatchCard({
     : null;
 
   return (
-    <Card className="overflow-hidden p-0">
+    <div id={`match-${match.id}`} className="scroll-mt-28">
+      <Card className="overflow-hidden p-0">
       <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 via-white to-zinc-50 px-5 py-4 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex gap-2">
@@ -130,7 +131,8 @@ export function MatchCard({
         mentionableUsers={mentionableUsers}
         currentUserId={currentUserId}
       />
-    </Card>
+      </Card>
+    </div>
   );
 }
 
