@@ -37,6 +37,7 @@ export default async function DashboardPage() {
     upcoming.map((match) => match.id)
   );
   const missingPicks = upcoming.filter((match) => !match.prediction).length;
+  const picksMade = upcoming.filter((match) => match.prediction).length;
 
   return (
     <AppShell profile={profile} active="dashboard">
@@ -52,10 +53,7 @@ export default async function DashboardPage() {
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Metric label="Upcoming matches" value={upcoming.length} />
         <Metric label="Missing picks" value={missingPicks} />
-        <Metric
-          label="Picks made"
-          value={matches.filter((match) => match.prediction).length}
-        />
+        <Metric label="Picks made" value={picksMade} />
       </div>
 
       <div className="grid gap-4">
