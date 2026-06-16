@@ -1,8 +1,8 @@
 # Bolão
 
-A friendly FIFA World Cup prediction web app. Friends sign in with Google or
-email, predict match scores, and compete on a score-only leaderboard. There is
-no money, no betting, and no extra markets such as cards or scorers.
+A friendly FIFA World Cup prediction web app. Friends sign in with email,
+predict match scores, and compete on a score-only leaderboard. There is no
+money, no betting, and no extra markets such as cards or scorers.
 
 ## Getting Started
 
@@ -18,9 +18,9 @@ Open [http://localhost:3000](http://localhost:3000).
 
 - Next.js 16 App Router, React 19, TypeScript
 - Supabase Auth, Postgres, and RLS
-- Google OAuth plus email/password auth
+- Email/password auth
 - Tailwind CSS 4
-- Vercel deploy script with optional Supabase migration and fixture seeding
+- Vercel deploy script with Supabase migrations and fixture seeding
 
 ## Environment
 
@@ -35,6 +35,7 @@ Set:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
+- `MIGRATION_DATABASE_URL` (or `POSTGRES_URL_NON_POOLING`, `DATABASE_URL`, `POSTGRES_URL`)
 - `PLATFORM_BASE_URL=http://localhost:3000`
 - `BOOTSTRAP_ADMIN_EMAIL=you@example.com`
 
@@ -44,30 +45,18 @@ sign in. Admins can enter final match results at `/admin/results`.
 ## Supabase Setup
 
 1. Create a Supabase project.
-2. Run the migration:
+2. Add your Supabase connection string to `.env.production` as `MIGRATION_DATABASE_URL`.
+3. Run migrations and seed the World Cup fixtures:
 
 ```bash
-npx supabase db push
+npm run vercel:migrate:prod
 ```
 
-3. Seed the World Cup fixtures:
+This uses `npx supabase db push --db-url "$MIGRATION_DATABASE_URL"`, so it does
+not require a globally installed Supabase CLI or a linked local project.
 
-```bash
-npm run seed:fixtures
-```
-
-4. In Supabase Auth, enable the Google provider.
-5. Add the callback URL:
-
-```text
-http://localhost:3000/auth/callback
-```
-
-For Vercel, also add:
-
-```text
-https://your-domain.com/auth/callback
-```
+You can also run the SQL manually from `supabase/migrations/001_initial.sql` in
+the Supabase SQL Editor, then run `npm run seed:fixtures`.
 
 ## Fixture JSON
 
@@ -98,6 +87,7 @@ npm run dev
 npm run lint
 npm run build
 npm run seed:fixtures
+npm run vercel:migrate:prod
 npm run deploy:vercel:prod
 ```
 
@@ -109,9 +99,6 @@ The Vercel deploy script mirrors the strategy used in the Givenly project:
 npm run deploy:vercel:prod:full
 ```
 
-That can sync env vars from `.env.production`, run Supabase migrations, seed
-fixtures, lint, build, and deploy to Vercel.
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+That can sync env vars from `.env.production`, run Supabase migrations through
+`npx supabase db push --db-url`, seed fixtures, lint, build, and deploy to
+Vercel.

@@ -52,6 +52,7 @@ export function Input({
     <input
       {...props}
       ref={ref}
+      suppressHydrationWarning
       className={cn(
         "mt-2 h-11 w-full rounded-2xl border border-zinc-200 bg-white px-4 text-sm text-zinc-950 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-100",
         props.className,
@@ -64,6 +65,7 @@ export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...props}
+      suppressHydrationWarning
       className={cn(
         "mt-2 h-11 w-full rounded-2xl border border-zinc-200 bg-white px-4 text-sm text-zinc-950 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-100",
         props.className,

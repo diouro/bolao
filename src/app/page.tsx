@@ -33,9 +33,9 @@ export default function Home() {
               Pick the scores. Climb the table. No money involved.
             </h2>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-600">
-              Sign in with Google or email, predict every World Cup score, and
-              see who in the group is reading the tournament best. The game is
-              score-only for now: no cards, scorers, corners, or betting.
+              Sign in with email, predict every World Cup score, and see who in
+              the group is reading the tournament best. The game is score-only
+              for now: no cards, scorers, corners, or betting.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/login">
@@ -79,7 +79,7 @@ export default function Home() {
               <Feature
                 icon={<Users className="h-4 w-4" />}
                 title="Open signup"
-                text="Friends can join directly with Google or email."
+                text="Friends can join directly with email and password."
               />
             </div>
           </Card>

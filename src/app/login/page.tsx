@@ -1,10 +1,6 @@
 import Link from "next/link";
 import { Trophy } from "lucide-react";
-import {
-  loginWithEmail,
-  loginWithGoogle,
-  registerWithEmail,
-} from "@/app/login/actions";
+import { loginWithEmail, registerWithEmail } from "@/app/login/actions";
 import { Button } from "@/components/button";
 import { PendingForm } from "@/components/pending-form";
 import { Card, Input, Label } from "@/components/ui";
@@ -39,8 +35,8 @@ export default async function LoginPage({
                 Sign in and start predicting the World Cup.
               </h1>
               <p className="mt-4 leading-7 text-zinc-300">
-                Use Google for the fastest login, or keep it simple with email
-                and password. Registration is open for friends.
+                Use email and password to join the game. Registration is open
+                for friends.
               </p>
             </div>
             <div className="mt-10 rounded-2xl bg-white/10 p-4 text-sm text-zinc-200">
@@ -48,41 +44,22 @@ export default async function LoginPage({
             </div>
           </Card>
 
-          <div className="grid gap-6">
-            <Card>
-              <h2 className="text-xl font-bold text-zinc-950">Continue with Google</h2>
-              <p className="mt-2 text-sm leading-6 text-zinc-600">
-                Supabase handles the Google OAuth session and creates your player
-                profile automatically.
-              </p>
-              <form action={loginWithGoogle} className="mt-5">
-                <input type="hidden" name="next" value={next} />
-                <Button
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  pendingChildren="Opening Google"
-                >
-                  Continue with Google
-                </Button>
-              </form>
-            </Card>
-
-            <div className="grid gap-6 md:grid-cols-2">
-              <AuthForm
-                title="Sign in"
-                action={loginWithEmail}
-                next={next}
-                submitLabel="Sign in"
-                pendingLabel="Signing in"
-              />
-              <AuthForm
-                title="Create account"
-                action={registerWithEmail}
-                next={next}
-                includeName
-                submitLabel="Create account"
-                pendingLabel="Creating account"
-              />
-            </div>
+          <div className="grid gap-6 md:grid-cols-2">
+            <AuthForm
+              title="Sign in"
+              action={loginWithEmail}
+              next={next}
+              submitLabel="Sign in"
+              pendingLabel="Signing in"
+            />
+            <AuthForm
+              title="Create account"
+              action={registerWithEmail}
+              next={next}
+              includeName
+              submitLabel="Create account"
+              pendingLabel="Creating account"
+            />
           </div>
         </div>
       </div>

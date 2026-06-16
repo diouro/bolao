@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getPlatformBaseUrl, getBootstrapAdminEmail } from "@/lib/env";
+import { getBootstrapAdminEmail } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -26,27 +26,6 @@ function safeNext(next?: string) {
   }
 
   return next;
-}
-
-export async function loginWithGoogle(formData: FormData) {
-  const next = safeNext(getString(formData, "next"));
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${getPlatformBaseUrl()}/auth/callback?next=${encodeURIComponent(next)}`,
-    },
-  });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  if (!data.url) {
-    throw new Error("Supabase did not return a Google sign-in URL.");
-  }
-
-  redirect(data.url);
 }
 
 export async function loginWithEmail(formData: FormData) {
