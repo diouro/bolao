@@ -3,6 +3,7 @@ import { MatchCard } from "@/components/match-card";
 import { Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
 import { getMatchCommentsForMatches } from "@/lib/comments";
+import { getAppDateKey } from "@/lib/dates";
 import {
   getFriendPredictionsForMatches,
   getMatchesWithUserPredictions,
@@ -27,7 +28,7 @@ export default async function DashboardPage() {
         now,
       }),
   );
-  const upcoming = openMatches.slice(0, 8);
+  const upcoming = getNextMatchDayMatches(openMatches);
   const commentsByMatch = await getMatchCommentsForMatches(
     upcoming.map((match) => match.id),
   );
@@ -35,7 +36,7 @@ export default async function DashboardPage() {
   const friendPredictionsByMatch = await getFriendPredictionsForMatches(
     upcoming.map((match) => match.id),
   );
-  const missingPicks = openMatches.filter((match) => !match.prediction).length;
+  const missingPicks = upcoming.filter((match) => !match.prediction).length;
 
   return (
     <AppShell profile={profile} active="dashboard">
@@ -47,8 +48,8 @@ export default async function DashboardPage() {
           Your next predictions
         </h1>
         <p className="mt-2 text-zinc-600">
-          Predict scores before the lock window closes. Results and points
-          appear after admins enter final scores.
+          Predict scores for the next match day before the lock window closes.
+          Results and points appear after admins enter final scores.
         </p>
       </div>
 
@@ -94,4 +95,16 @@ function Metric({ label, value }: { label: string; value: number }) {
       <div className="mt-1 text-sm font-medium text-zinc-500">{label}</div>
     </Card>
   );
+}
+
+function getNextMatchDayMatches(matches: Awaited<ReturnType<typeof getMatchesWithUserPredictions>>) {
+  const firstMatch = matches[0];
+
+  if (!firstMatch) {
+    return [];
+  }
+
+  const matchDay = getAppDateKey(firstMatch.kickoff_at);
+
+  return matches.filter((match) => getAppDateKey(match.kickoff_at) === matchDay);
 }

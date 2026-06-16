@@ -5,6 +5,7 @@ import { ResultForm } from "@/components/result-form";
 import { Badge, Card } from "@/components/ui";
 import { syncFinishedResults } from "@/app/(app)/admin/results/actions";
 import { requireAdmin } from "@/lib/auth";
+import { formatAppDateTime } from "@/lib/dates";
 import { getAllMatches } from "@/lib/matches";
 import { resolveMatchSide } from "@/lib/tournament/resolve-slots";
 import type { Match } from "@/lib/types";
@@ -80,10 +81,7 @@ function ResultRow({ match }: { match: Match }) {
           <Team name={away.name} code={away.code} slot={away.slot} align="right" />
         </div>
         <time className="mt-3 block text-sm text-zinc-500">
-          {new Intl.DateTimeFormat("en", {
-            dateStyle: "medium",
-            timeStyle: "short",
-          }).format(new Date(match.kickoff_at))}
+          {formatAppDateTime(match.kickoff_at)}
         </time>
       </div>
       <ResultForm match={match} />

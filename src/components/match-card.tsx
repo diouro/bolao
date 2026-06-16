@@ -5,6 +5,7 @@ import { MatchComments } from "@/components/match-comments";
 import { MatchFriendPredictions } from "@/components/match-friend-predictions";
 import { PendingForm } from "@/components/pending-form";
 import { Badge, Card, Input } from "@/components/ui";
+import { formatAppDateTime } from "@/lib/dates";
 import { isPredictionLocked } from "@/lib/predictions/lock";
 import { calculatePoints } from "@/lib/scoring/calculate-points";
 import { resolveMatchSide } from "@/lib/tournament/resolve-slots";
@@ -73,13 +74,7 @@ export function MatchCard({
             )}
           </div>
           <time className="text-sm font-semibold text-zinc-500">
-            {new Intl.DateTimeFormat("en", {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-            }).format(new Date(match.kickoff_at))}
+            {formatAppDateTime(match.kickoff_at)}
           </time>
         </div>
       </div>

@@ -26,6 +26,10 @@ export function getPlatformName() {
   return readEnv("PLATFORM_NAME") || "Bolão";
 }
 
+export function getAppTimeZone() {
+  return readEnv("APP_TIME_ZONE") || "Australia/Sydney";
+}
+
 export function getBootstrapAdminEmail() {
   return readEnv("BOOTSTRAP_ADMIN_EMAIL").toLowerCase();
 }
