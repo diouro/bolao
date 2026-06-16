@@ -25,8 +25,46 @@ export function resolveMatchSide(match: Match, side: "home" | "away"): ResolvedS
 
   return {
     code: null,
-    name: slot ?? "TBD",
+    name: formatSlotName(slot),
     slot,
     isPlaceholder: true,
   };
+}
+
+function formatSlotName(slot?: string | null) {
+  if (!slot || slot === "TBD") {
+    return "Team TBD";
+  }
+
+  const groupWinner = slot.match(/^1([A-L])$/);
+
+  if (groupWinner) {
+    return `Winner Group ${groupWinner[1]}`;
+  }
+
+  const groupRunnerUp = slot.match(/^2([A-L])$/);
+
+  if (groupRunnerUp) {
+    return `Runner-up Group ${groupRunnerUp[1]}`;
+  }
+
+  const thirdPlace = slot.match(/^3([A-L]+)$/);
+
+  if (thirdPlace) {
+    return `Best 3rd ${thirdPlace[1].split("").join("/")}`;
+  }
+
+  const winner = slot.match(/^W\s+(.+)$/);
+
+  if (winner) {
+    return `Winner ${winner[1]}`;
+  }
+
+  const loser = slot.match(/^L\s+(.+)$/);
+
+  if (loser) {
+    return `Loser ${loser[1]}`;
+  }
+
+  return slot;
 }

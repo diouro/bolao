@@ -1,6 +1,14 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { BarChart3, Check, ListChecks, LogOut, Shield, Trophy } from "lucide-react";
+import {
+  BarChart3,
+  Check,
+  ListChecks,
+  LogOut,
+  MessageCircle,
+  Shield,
+  Trophy,
+} from "lucide-react";
 import { logout } from "@/app/actions";
 import { Button } from "@/components/button";
 import { cn } from "@/lib/utils";
@@ -11,6 +19,7 @@ const navItems = [
   { key: "predictions", label: "Predictions", href: "/predictions", icon: Trophy },
   { key: "leaderboard", label: "Leaderboard", href: "/leaderboard", icon: BarChart3 },
   { key: "breakdown", label: "Breakdown", href: "/breakdown", icon: ListChecks },
+  { key: "chat", label: "Chat", href: "/chat", icon: MessageCircle },
   { key: "stats", label: "Stats", href: "/stats", icon: BarChart3 },
 ];
 
@@ -25,6 +34,7 @@ export function AppShell({
     | "predictions"
     | "leaderboard"
     | "breakdown"
+    | "chat"
     | "stats"
     | "admin";
   children: ReactNode;
@@ -119,7 +129,7 @@ export function AppShell({
         </div>
       </section>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-zinc-200 bg-white lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-zinc-200 bg-white lg:hidden">
         {navItems.map((item) => (
           <Link
             key={item.key}

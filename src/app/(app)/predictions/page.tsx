@@ -21,15 +21,14 @@ import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-const roundOrder: TournamentRound[] = [
-  "group",
+const knockoutRoundOrder = [
   "round_of_32",
   "round_of_16",
   "quarter_final",
   "semi_final",
   "third_place",
   "final",
-];
+] as const satisfies readonly TournamentRound[];
 
 const roundLabels: Record<TournamentRound, string> = {
   group: "Group stage",
@@ -41,9 +40,24 @@ const roundLabels: Record<TournamentRound, string> = {
   final: "Final",
 };
 
-const groupOrder = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
+const groupOrder = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+] as const;
 
-type FixtureCategory = (typeof groupOrder)[number] | "knockout";
+type GroupCategory = (typeof groupOrder)[number];
+type KnockoutCategory = (typeof knockoutRoundOrder)[number];
+type FixtureCategory = GroupCategory | KnockoutCategory;
 
 export default async function PredictionsPage({
   searchParams,
@@ -55,22 +69,17 @@ export default async function PredictionsPage({
   const matches = await getMatchesWithUserPredictions(profile.id);
   const lockMinutes = await getPredictionLockMinutes();
   const selectedCategory = normalizeCategory(params.group);
-  const groupMatches =
-    selectedCategory === "knockout"
-      ? []
-      : matches.filter(
-          (match) =>
-            match.round === "group" && match.group_code === selectedCategory,
-        );
-  const knockoutMatches = matches.filter((match) => match.round !== "group");
-  const displayedMatches =
-    selectedCategory === "knockout" ? knockoutMatches : groupMatches;
+  const displayedMatches = isKnockoutCategory(selectedCategory)
+    ? matches.filter((match) => match.round === selectedCategory)
+    : matches.filter(
+        (match) => match.round === "group" && match.group_code === selectedCategory
+      );
   const commentsByMatch = await getMatchCommentsForMatches(
-    displayedMatches.map((match) => match.id),
+    displayedMatches.map((match) => match.id)
   );
   const mentionableUsers = await getMentionableUsers();
   const friendPredictionsByMatch = await getFriendPredictionsForMatches(
-    displayedMatches.map((match) => match.id),
+    displayedMatches.map((match) => match.id)
   );
 
   return (
@@ -82,17 +91,14 @@ export default async function PredictionsPage({
         <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
           Full fixture list
         </h1>
-        <p className="mt-2 text-zinc-600">
-          Group teams use country flags. Knockout rounds show slots such as 1A
-          until you update the JSON and re-seed fixtures.
-        </p>
       </div>
 
       <div className="space-y-6">
         <FixtureNavigation selectedCategory={selectedCategory} />
-        {selectedCategory === "knockout" ? (
-          <KnockoutStage
-            matches={knockoutMatches}
+        {isKnockoutCategory(selectedCategory) ? (
+          <RoundFixture
+            round={selectedCategory}
+            matches={displayedMatches}
             lockMinutes={lockMinutes}
             commentsByMatch={commentsByMatch}
             friendPredictionsByMatch={friendPredictionsByMatch}
@@ -102,7 +108,7 @@ export default async function PredictionsPage({
         ) : (
           <GroupFixture
             group={selectedCategory}
-            matches={groupMatches}
+            matches={displayedMatches}
             lockMinutes={lockMinutes}
             commentsByMatch={commentsByMatch}
             friendPredictionsByMatch={friendPredictionsByMatch}
@@ -117,12 +123,24 @@ export default async function PredictionsPage({
 
 function normalizeCategory(group?: string): FixtureCategory {
   if (group === "knockout") {
-    return "knockout";
+    return "round_of_32";
+  }
+
+  const normalizedRound = group?.toLowerCase() as KnockoutCategory | undefined;
+
+  if (normalizedRound && knockoutRoundOrder.includes(normalizedRound)) {
+    return normalizedRound;
   }
 
   const normalized = group?.toUpperCase() ?? "A";
 
-  return groupOrder.includes(normalized) ? normalized : "A";
+  return groupOrder.includes(normalized as GroupCategory)
+    ? (normalized as GroupCategory)
+    : "A";
+}
+
+function isKnockoutCategory(category: FixtureCategory): category is KnockoutCategory {
+  return knockoutRoundOrder.includes(category as KnockoutCategory);
 }
 
 function FixtureNavigation({
@@ -131,30 +149,35 @@ function FixtureNavigation({
   selectedCategory: FixtureCategory;
 }) {
   return (
-    <Card className="p-3">
-      <div className="flex gap-2 overflow-x-auto">
+    <Card className="sticky top-4 z-10 p-3">
+      <div className="flex gap-2 overflow-x-auto px-1 pb-1">
         {groupOrder.map((group) => (
           <Link
             key={group}
             href={`/predictions?group=${group}`}
             className={cn(
               "inline-flex h-10 shrink-0 items-center justify-center rounded-full px-4 text-sm font-bold text-zinc-600 transition hover:bg-zinc-100",
-              selectedCategory === group && "bg-emerald-600 text-white hover:bg-emerald-600",
+              selectedCategory === group &&
+                "bg-emerald-600 text-white hover:bg-emerald-600"
             )}
           >
             Group {group}
           </Link>
         ))}
-        <Link
-          href="/predictions?group=knockout"
-          className={cn(
-            "inline-flex h-10 shrink-0 items-center justify-center rounded-full px-4 text-sm font-bold text-zinc-600 transition hover:bg-zinc-100",
-            selectedCategory === "knockout" &&
-              "bg-zinc-950 text-white hover:bg-zinc-950",
-          )}
-        >
-          Knockout
-        </Link>
+        <div className="mx-1 h-10 w-px shrink-0 bg-zinc-200" />
+        {knockoutRoundOrder.map((round) => (
+          <Link
+            key={round}
+            href={`/predictions?group=${round}`}
+            className={cn(
+              "inline-flex h-10 shrink-0 items-center justify-center rounded-full px-4 text-sm font-bold text-zinc-600 transition hover:bg-zinc-100",
+              selectedCategory === round &&
+                "bg-zinc-950 text-white hover:bg-zinc-950"
+            )}
+          >
+            {roundLabels[round]}
+          </Link>
+        ))}
       </div>
     </Card>
   );
@@ -185,9 +208,7 @@ function GroupFixture({
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
               Group {group}
             </p>
-            <h2 className="mt-1 text-2xl font-black text-zinc-950">
-              Fixture
-            </h2>
+            <h2 className="mt-1 text-2xl font-black text-zinc-950">Fixture</h2>
           </div>
           <div className="text-sm font-semibold text-zinc-500">
             {matches.length} matches
@@ -211,7 +232,8 @@ function GroupFixture({
   );
 }
 
-function KnockoutStage({
+function RoundFixture({
+  round,
   matches,
   lockMinutes,
   commentsByMatch,
@@ -219,6 +241,7 @@ function KnockoutStage({
   mentionableUsers,
   currentUserId,
 }: {
+  round: KnockoutCategory;
   matches: MatchWithPrediction[];
   lockMinutes: number;
   commentsByMatch: Map<string, MatchComment[]>;
@@ -227,49 +250,38 @@ function KnockoutStage({
   currentUserId: string;
 }) {
   return (
-    <section className="space-y-8">
-      <Card className="bg-zinc-50/60">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
-          Knockout
-        </p>
-        <h2 className="mt-1 text-2xl font-black text-zinc-950">
-          Bracket fixtures
-        </h2>
-        <p className="mt-2 text-sm text-zinc-600">
-          Slots such as 1A or W R32-1 can be replaced in the JSON once teams are
-          known.
+    <section>
+      <Card className="mb-4 bg-zinc-50/60">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
+              Knockout
+            </p>
+            <h2 className="mt-1 text-2xl font-black text-zinc-950">
+              {roundLabels[round]}
+            </h2>
+          </div>
+          <div className="text-sm font-semibold text-zinc-500">
+            {matches.length} matches
+          </div>
+        </div>
+        <p className="mt-3 text-sm text-zinc-600">
+          Slots such as 1A or W R32-1 will show here until the teams are known.
         </p>
       </Card>
-      {roundOrder
-        .filter((round) => round !== "group")
-        .map((round) => {
-          const roundMatches = matches.filter((match) => match.round === round);
-
-          if (roundMatches.length === 0) {
-            return null;
-          }
-
-          return (
-            <div key={round}>
-              <h3 className="mb-4 text-xl font-black text-zinc-950">
-                {roundLabels[round]}
-              </h3>
-              <div className="grid gap-4">
-                {roundMatches.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    lockMinutes={lockMinutes}
-                    comments={commentsByMatch.get(match.id) ?? []}
-                    friendPredictions={friendPredictionsByMatch.get(match.id) ?? []}
-                    mentionableUsers={mentionableUsers}
-                    currentUserId={currentUserId}
-                  />
-                ))}
-              </div>
-            </div>
-          );
-        })}
+      <div className="grid gap-4">
+        {matches.map((match) => (
+          <MatchCard
+            key={match.id}
+            match={match}
+            lockMinutes={lockMinutes}
+            comments={commentsByMatch.get(match.id) ?? []}
+            friendPredictions={friendPredictionsByMatch.get(match.id) ?? []}
+            mentionableUsers={mentionableUsers}
+            currentUserId={currentUserId}
+          />
+        ))}
+      </div>
     </section>
   );
 }

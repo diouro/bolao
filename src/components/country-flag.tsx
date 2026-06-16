@@ -64,8 +64,8 @@ export function CountryFlag({
 
   if (!iso) {
     return (
-      <span className={className}>
-        <Badge className="h-8 items-center rounded-xl bg-zinc-200 px-2 text-zinc-600">
+      <span className="inline-flex shrink-0">
+        <Badge className="min-h-10 items-center rounded-xl bg-zinc-200 px-3 py-2 text-zinc-600 shadow-sm ring-1 ring-zinc-200">
           {slot ?? "TBD"}
         </Badge>
       </span>

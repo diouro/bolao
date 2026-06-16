@@ -18,10 +18,6 @@ export default async function StatsPage() {
         <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
           Beyond the table
         </h1>
-        <p className="mt-2 text-zinc-600">
-          Streaks, exact hits, bold scorelines, and goal averages based only on
-          finished matches.
-        </p>
       </div>
 
       <StatsCards summary={summary} />

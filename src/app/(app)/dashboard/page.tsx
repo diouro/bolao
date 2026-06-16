@@ -26,15 +26,15 @@ export default async function DashboardPage() {
         kickoffAt: match.kickoff_at,
         lockMinutes,
         now,
-      }),
+      })
   );
   const upcoming = getNextMatchDayMatches(openMatches);
   const commentsByMatch = await getMatchCommentsForMatches(
-    upcoming.map((match) => match.id),
+    upcoming.map((match) => match.id)
   );
   const mentionableUsers = await getMentionableUsers();
   const friendPredictionsByMatch = await getFriendPredictionsForMatches(
-    upcoming.map((match) => match.id),
+    upcoming.map((match) => match.id)
   );
   const missingPicks = upcoming.filter((match) => !match.prediction).length;
 
@@ -47,10 +47,6 @@ export default async function DashboardPage() {
         <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
           Your next predictions
         </h1>
-        <p className="mt-2 text-zinc-600">
-          Predict scores for the next match day before the lock window closes.
-          Results and points appear after admins enter final scores.
-        </p>
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
@@ -97,7 +93,9 @@ function Metric({ label, value }: { label: string; value: number }) {
   );
 }
 
-function getNextMatchDayMatches(matches: Awaited<ReturnType<typeof getMatchesWithUserPredictions>>) {
+function getNextMatchDayMatches(
+  matches: Awaited<ReturnType<typeof getMatchesWithUserPredictions>>
+) {
   const firstMatch = matches[0];
 
   if (!firstMatch) {
@@ -106,5 +104,7 @@ function getNextMatchDayMatches(matches: Awaited<ReturnType<typeof getMatchesWit
 
   const matchDay = getAppDateKey(firstMatch.kickoff_at);
 
-  return matches.filter((match) => getAppDateKey(match.kickoff_at) === matchDay);
+  return matches.filter(
+    (match) => getAppDateKey(match.kickoff_at) === matchDay
+  );
 }

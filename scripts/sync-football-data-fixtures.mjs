@@ -73,10 +73,11 @@ if (error) {
   throw new Error(error.message);
 }
 
+const duplicatePlaceholderSummary = await removeDuplicateApiPlaceholderFixtures();
 const dedupeSummary = await mergeDuplicateApiFixtures();
 
 console.log(
-  `Synced ${rows.length} World Cup fixtures from football-data.org. Removed ${dedupeSummary.removed} duplicate JSON fixture${dedupeSummary.removed === 1 ? "" : "s"}.`,
+  `Synced ${rows.length} World Cup fixtures from football-data.org. Removed ${dedupeSummary.removed} duplicate JSON fixture${dedupeSummary.removed === 1 ? "" : "s"} and ${duplicatePlaceholderSummary.removed} generic API knockout placeholder${duplicatePlaceholderSummary.removed === 1 ? "" : "s"}.`,
 );
 
 async function fetchFootballDataMatches() {
@@ -253,6 +254,89 @@ async function mergeDuplicateApiFixtures() {
   return { removed };
 }
 
+async function removeDuplicateApiPlaceholderFixtures() {
+  const { data: matches, error: matchesError } = await supabase
+    .from("matches")
+    .select("*")
+    .neq("round", "group")
+    .order("kickoff_at", { ascending: true });
+
+  if (matchesError) {
+    throw new Error(matchesError.message);
+  }
+
+  const jsonPlaceholderCounts = new Map();
+
+  for (const match of matches ?? []) {
+    if (match.external_provider || !hasSpecificSlot(match)) {
+      continue;
+    }
+
+    jsonPlaceholderCounts.set(
+      match.round,
+      (jsonPlaceholderCounts.get(match.round) ?? 0) + 1,
+    );
+  }
+
+  let removed = 0;
+
+  for (const match of matches ?? []) {
+    if (
+      match.external_provider !== providerName ||
+      match.home_team_code ||
+      match.away_team_code ||
+      match.home_team_name ||
+      match.away_team_name ||
+      match.home_slot !== "TBD" ||
+      match.away_slot !== "TBD" ||
+      !jsonPlaceholderCounts.has(match.round)
+    ) {
+      continue;
+    }
+
+    await movePredictions(match.id, findNearestJsonPlaceholder(matches ?? [], match)?.id);
+    await moveComments(match.id, findNearestJsonPlaceholder(matches ?? [], match)?.id);
+
+    const { error: deleteError } = await supabase
+      .from("matches")
+      .delete()
+      .eq("id", match.id);
+
+    if (deleteError) {
+      throw new Error(deleteError.message);
+    }
+
+    removed += 1;
+  }
+
+  return { removed };
+}
+
+function hasSpecificSlot(match) {
+  return (
+    (match.home_slot && match.home_slot !== "TBD") ||
+    (match.away_slot && match.away_slot !== "TBD")
+  );
+}
+
+function findNearestJsonPlaceholder(matches, apiPlaceholder) {
+  return matches
+    .filter(
+      (match) =>
+        !match.external_provider &&
+        match.round === apiPlaceholder.round &&
+        hasSpecificSlot(match),
+    )
+    .map((match) => ({
+      match,
+      distance: Math.abs(
+        new Date(match.kickoff_at).getTime() -
+          new Date(apiPlaceholder.kickoff_at).getTime(),
+      ),
+    }))
+    .sort((a, b) => a.distance - b.distance)[0]?.match ?? null;
+}
+
 function fixtureKey(match) {
   if (!match.home_team_code || !match.away_team_code) {
     return null;
@@ -268,6 +352,10 @@ function fixtureKey(match) {
 }
 
 async function movePredictions(fromMatchId, toMatchId) {
+  if (!toMatchId) {
+    return;
+  }
+
   const [
     { data: stalePredictions, error: staleError },
     { data: existingPredictions, error: existingError },
@@ -318,6 +406,10 @@ async function movePredictions(fromMatchId, toMatchId) {
 }
 
 async function moveComments(fromMatchId, toMatchId) {
+  if (!toMatchId) {
+    return;
+  }
+
   const { error } = await supabase
     .from("match_comments")
     .update({ match_id: toMatchId })

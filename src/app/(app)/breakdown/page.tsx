@@ -20,10 +20,6 @@ export default async function BreakdownPage() {
         <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
           Points per user, per match
         </h1>
-        <p className="mt-2 text-zinc-600">
-          Exact score: 3 points. Correct outcome only: 1 point. Wrong or missing
-          prediction: 0 points.
-        </p>
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
@@ -31,7 +27,10 @@ export default async function BreakdownPage() {
         <Metric label="Players" value={breakdown.users.length} />
         <Metric
           label="Total points awarded"
-          value={breakdown.users.reduce((sum, user) => sum + user.totalPoints, 0)}
+          value={breakdown.users.reduce(
+            (sum, user) => sum + user.totalPoints,
+            0
+          )}
         />
       </div>
 

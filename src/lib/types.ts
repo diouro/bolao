@@ -91,6 +91,13 @@ export type MatchComment = {
   author_email: string | null;
 };
 
+export type ChatMessage = {
+  id: string;
+  user_id: string;
+  body: string;
+  created_at: string;
+};
+
 export type MatchFriendPrediction = Prediction & {
   display_name: string | null;
   email: string | null;

@@ -21,10 +21,6 @@ export default async function LeaderboardPage() {
         <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
           Friend ranking
         </h1>
-        <p className="mt-2 text-zinc-600">
-          Exact score: 3 points. Correct outcome only: 1 point. Wrong: 0
-          points.
-        </p>
       </div>
 
       <div className="mb-6 grid gap-4 lg:grid-cols-2">

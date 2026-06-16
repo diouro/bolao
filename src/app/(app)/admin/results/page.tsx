@@ -31,10 +31,6 @@ export default async function AdminResultsPage() {
           <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
             Enter final scores
           </h1>
-          <p className="mt-2 text-zinc-600">
-            Sync finished scores from the configured provider, or save a final
-            match score manually.
-          </p>
         </div>
         <form action={syncFinishedResults}>
           <Button
@@ -48,10 +44,14 @@ export default async function AdminResultsPage() {
 
       <div className="grid gap-4">
         {matchesToShow.length > 0 ? (
-          matchesToShow.map((match) => <ResultRow key={match.id} match={match} />)
+          matchesToShow.map((match) => (
+            <ResultRow key={match.id} match={match} />
+          ))
         ) : (
           <Card>
-            <p className="font-semibold text-zinc-950">No matches are ready yet.</p>
+            <p className="font-semibold text-zinc-950">
+              No matches are ready yet.
+            </p>
             <p className="mt-2 text-sm text-zinc-600">
               Matches appear here after kickoff.
             </p>
@@ -78,7 +78,12 @@ function ResultRow({ match }: { match: Match }) {
           <span className="rounded-full bg-zinc-100 px-3 py-1 text-sm font-black text-zinc-700">
             vs
           </span>
-          <Team name={away.name} code={away.code} slot={away.slot} align="right" />
+          <Team
+            name={away.name}
+            code={away.code}
+            slot={away.slot}
+            align="right"
+          />
         </div>
         <time className="mt-3 block text-sm text-zinc-500">
           {formatAppDateTime(match.kickoff_at)}
