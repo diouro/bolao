@@ -1,12 +1,22 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Trophy, Users, BarChart3 } from "lucide-react";
 import { Button } from "@/components/button";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Card } from "@/components/ui";
+import { getCurrentUser } from "@/lib/auth";
 import { getLocale } from "@/lib/i18n-server";
 import { t } from "@/lib/i18n";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
+  const user = await getCurrentUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
+
   const locale = await getLocale();
 
   return (
