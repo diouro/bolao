@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import {
   formatPredictionLockLabel,
-  isPredictionLocked,
+  isPredictionEditable,
 } from "@/lib/predictions/lock";
 import { getPredictionLockMinutes } from "@/lib/predictions/settings";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -38,7 +38,7 @@ export async function savePrediction(formData: FormData) {
   const lockMinutes = await getPredictionLockMinutes();
 
   if (
-    isPredictionLocked({
+    !isPredictionEditable({
       kickoffAt: match.kickoff_at,
       lockMinutes,
     })

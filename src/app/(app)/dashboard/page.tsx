@@ -2,14 +2,14 @@ import { MatchCard } from "@/components/match-card";
 import { Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
 import { getMatchCommentsForMatches } from "@/lib/comments";
-import { getAppDateKey } from "@/lib/dates";
+import { getMatchesForNextMatchDay } from "@/lib/match-day";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import {
   getFriendPredictionsForMatches,
   getMatchesWithUserPredictions,
 } from "@/lib/matches";
-import { isPredictionLocked } from "@/lib/predictions/lock";
+import { isPredictionEditable } from "@/lib/predictions/lock";
 import { getPredictionLockMinutes } from "@/lib/predictions/settings";
 import { getMentionableUsers } from "@/lib/profiles";
 
@@ -21,16 +21,14 @@ export default async function DashboardPage() {
   const matches = await getMatchesWithUserPredictions(profile.id);
   const lockMinutes = await getPredictionLockMinutes();
   const now = new Date();
-  const openMatches = matches.filter(
-    (match) =>
-      match.status === "scheduled" &&
-      !isPredictionLocked({
-        kickoffAt: match.kickoff_at,
-        lockMinutes,
-        now,
-      })
+  const upcoming = getMatchesForNextMatchDay(matches, now);
+  const editableMatches = upcoming.filter((match) =>
+    isPredictionEditable({
+      kickoffAt: match.kickoff_at,
+      lockMinutes,
+      now,
+    })
   );
-  const upcoming = getNextMatchDayMatches(openMatches);
   const commentsByMatch = await getMatchCommentsForMatches(
     upcoming.map((match) => match.id)
   );
@@ -38,7 +36,7 @@ export default async function DashboardPage() {
   const friendPredictionsByMatch = await getFriendPredictionsForMatches(
     upcoming.map((match) => match.id)
   );
-  const missingPicks = upcoming.filter((match) => !match.prediction).length;
+  const missingPicks = editableMatches.filter((match) => !match.prediction).length;
   const picksMade = upcoming.filter((match) => match.prediction).length;
 
   return (
@@ -93,21 +91,5 @@ function Metric({ label, value }: { label: string; value: number }) {
       <div className="text-3xl font-black text-zinc-950">{value}</div>
       <div className="mt-1 text-sm font-medium text-zinc-500">{label}</div>
     </Card>
-  );
-}
-
-function getNextMatchDayMatches(
-  matches: Awaited<ReturnType<typeof getMatchesWithUserPredictions>>
-) {
-  const firstMatch = matches[0];
-
-  if (!firstMatch) {
-    return [];
-  }
-
-  const matchDay = getAppDateKey(firstMatch.kickoff_at);
-
-  return matches.filter(
-    (match) => getAppDateKey(match.kickoff_at) === matchDay
   );
 }

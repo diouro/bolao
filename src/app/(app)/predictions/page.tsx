@@ -3,6 +3,7 @@ import { MatchCard } from "@/components/match-card";
 import { Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
 import { getMatchCommentsForMatches } from "@/lib/comments";
+import { getMatchesForNextMatchDay } from "@/lib/match-day";
 import {
   getFriendPredictionsForMatches,
   getMatchesWithUserPredictions,
@@ -70,7 +71,9 @@ export default async function PredictionsPage({
   const locale = await getLocale();
   const matches = await getMatchesWithUserPredictions(profile.id);
   const lockMinutes = await getPredictionLockMinutes();
-  const selectedCategory = normalizeCategory(params.group);
+  const selectedCategory = params.group
+    ? normalizeCategory(params.group)
+    : getDefaultFixtureCategory(matches);
   const displayedMatches = isKnockoutCategory(selectedCategory)
     ? matches.filter((match) => match.round === selectedCategory)
     : matches.filter(
@@ -123,6 +126,33 @@ export default async function PredictionsPage({
       </div>
     </>
   );
+}
+
+function getDefaultFixtureCategory(
+  matches: MatchWithPrediction[],
+): FixtureCategory {
+  const activeMatches = matches.filter((match) => match.status !== "finished");
+  const sameDayMatches = getMatchesForNextMatchDay(activeMatches);
+
+  if (sameDayMatches.length === 0) {
+    return "A";
+  }
+
+  const groupMatch = sameDayMatches.find(
+    (match) => match.round === "group" && match.group_code,
+  );
+
+  if (groupMatch?.group_code && groupOrder.includes(groupMatch.group_code as GroupCategory)) {
+    return groupMatch.group_code as GroupCategory;
+  }
+
+  const knockoutMatch = sameDayMatches.find((match) => match.round !== "group");
+
+  if (knockoutMatch && isKnockoutCategory(knockoutMatch.round)) {
+    return knockoutMatch.round;
+  }
+
+  return "A";
 }
 
 function normalizeCategory(group?: string): FixtureCategory {

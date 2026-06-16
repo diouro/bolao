@@ -7,7 +7,7 @@ import { PendingForm } from "@/components/pending-form";
 import { Badge, Card, Input } from "@/components/ui";
 import { formatAppDateTime } from "@/lib/dates";
 import { t, type Locale, type TranslationKey } from "@/lib/i18n";
-import { isPredictionLocked } from "@/lib/predictions/lock";
+import { isPredictionEditable } from "@/lib/predictions/lock";
 import { calculatePoints } from "@/lib/scoring/calculate-points";
 import { resolveMatchSide } from "@/lib/tournament/resolve-slots";
 import type {
@@ -46,12 +46,13 @@ export function MatchCard({
 }) {
   const home = resolveMatchSide(match, "home");
   const away = resolveMatchSide(match, "away");
-  const locked = isPredictionLocked({
+  const locked = !isPredictionEditable({
     kickoffAt: match.kickoff_at,
     lockMinutes,
   });
   const hasStarted = new Date(match.kickoff_at).getTime() <= new Date().getTime();
-  const hasScore = match.home_score !== null && match.away_score !== null;
+  const hasResultScore =
+    match.home_score !== null && match.away_score !== null;
   const hasSavedPrediction = Boolean(match.prediction);
   const points = match.prediction
     ? calculatePoints({
@@ -88,8 +89,9 @@ export function MatchCard({
           <MatchBody
             home={home}
             away={away}
+            status={match.status}
             hasStarted={hasStarted}
-            hasScore={hasScore}
+            hasResultScore={hasResultScore}
             homeScore={match.home_score}
             awayScore={match.away_score}
             homePrediction={match.prediction?.home_score ?? null}
@@ -110,8 +112,9 @@ export function MatchCard({
           <MatchBody
             home={home}
             away={away}
+            status={match.status}
             hasStarted={hasStarted}
-            hasScore={hasScore}
+            hasResultScore={hasResultScore}
             homeScore={match.home_score}
             awayScore={match.away_score}
             editable
@@ -148,8 +151,9 @@ export function MatchCard({
 function MatchBody({
   home,
   away,
+  status,
   hasStarted,
-  hasScore,
+  hasResultScore,
   homeScore,
   awayScore,
   editable = false,
@@ -160,8 +164,9 @@ function MatchBody({
 }: {
   home: ReturnType<typeof resolveMatchSide>;
   away: ReturnType<typeof resolveMatchSide>;
+  status: MatchWithPrediction["status"];
   hasStarted: boolean;
-  hasScore: boolean;
+  hasResultScore: boolean;
   homeScore: number | null;
   awayScore: number | null;
   editable?: boolean;
@@ -197,8 +202,9 @@ function MatchBody({
         </div>
         <div className="sm:order-3">
           <MatchStatus
+            status={status}
             hasStarted={hasStarted}
-            hasScore={hasScore}
+            hasResultScore={hasResultScore}
             homeScore={homeScore}
             awayScore={awayScore}
             locale={locale}
@@ -218,29 +224,42 @@ function MatchBody({
 }
 
 function MatchStatus({
+  status,
   hasStarted,
-  hasScore,
+  hasResultScore,
   homeScore,
   awayScore,
   locale,
 }: {
+  status: MatchWithPrediction["status"];
   hasStarted: boolean;
-  hasScore: boolean;
+  hasResultScore: boolean;
   homeScore: number | null;
   awayScore: number | null;
   locale: Locale;
 }) {
+  const showAwaitingScore =
+    hasStarted && !hasResultScore && status !== "finished";
+
   return (
     <div className="flex flex-col items-center">
       <div className="rounded-3xl border border-zinc-200 bg-zinc-950 px-4 py-3 text-center text-white shadow-sm sm:min-w-28">
         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-          {hasScore ? t(locale, "round.final") : hasStarted ? t(locale, "match.status") : t(locale, "common.match")}
+          {hasResultScore
+            ? t(locale, "match.fullTime")
+            : hasStarted
+              ? t(locale, "match.status")
+              : t(locale, "common.match")}
         </div>
         <div className="mt-1 text-lg font-black sm:text-2xl">
-          {hasScore ? `${homeScore}-${awayScore}` : hasStarted ? t(locale, "common.tbd") : "vs"}
+          {hasResultScore
+            ? `${homeScore}-${awayScore}`
+            : hasStarted
+              ? t(locale, "common.tbd")
+              : "vs"}
         </div>
       </div>
-      {hasStarted && !hasScore && (
+      {showAwaitingScore && (
         <div className="mt-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
           {t(locale, "match.awaitingScore")}
         </div>

@@ -145,17 +145,38 @@ function findExistingMatch(remoteMatch, localMatches) {
 }
 
 function extractScore(remoteMatch) {
-  const homeScore = remoteMatch.score?.fullTime?.home;
-  const awayScore = remoteMatch.score?.fullTime?.away;
+  const fullTime = remoteMatch.score?.fullTime;
+  const regularTime = remoteMatch.score?.regularTime;
+  const halfTime = remoteMatch.score?.halfTime;
 
-  if (remoteMatch.status !== "FINISHED" || homeScore === null || awayScore === null) {
+  if (remoteMatch.status === "FINISHED") {
+    if (fullTime?.home != null && fullTime?.away != null) {
+      return {
+        homeScore: fullTime.home,
+        awayScore: fullTime.away,
+      };
+    }
+
     return null;
   }
 
-  return {
-    homeScore,
-    awayScore,
-  };
+  if (["IN_PLAY", "PAUSED"].includes(remoteMatch.status)) {
+    const liveScore =
+      regularTime?.home != null && regularTime?.away != null
+        ? regularTime
+        : halfTime?.home != null && halfTime?.away != null
+          ? halfTime
+          : null;
+
+    if (liveScore) {
+      return {
+        homeScore: liveScore.home,
+        awayScore: liveScore.away,
+      };
+    }
+  }
+
+  return null;
 }
 
 function mapStatus(status) {

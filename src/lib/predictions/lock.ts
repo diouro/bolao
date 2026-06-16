@@ -26,6 +26,18 @@ export function isPredictionLocked({
   return getPredictionLockCutoff(kickoffAt, lockMinutes) <= now.getTime();
 }
 
+export function isPredictionEditable({
+  kickoffAt,
+  lockMinutes,
+  now = new Date(),
+}: {
+  kickoffAt: string;
+  lockMinutes: number;
+  now?: Date;
+}) {
+  return !isPredictionLocked({ kickoffAt, lockMinutes, now });
+}
+
 export function formatPredictionLockLabel(lockMinutes: number) {
   if (lockMinutes === 0) {
     return "at kickoff";
