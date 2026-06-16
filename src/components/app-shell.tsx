@@ -12,8 +12,10 @@ import {
 } from "lucide-react";
 import { logout } from "@/app/actions";
 import { Button } from "@/components/button";
+import { ChatNavBadge } from "@/components/chat-nav-badge";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { MentionNavBadge } from "@/components/mention-nav-badge";
+import { getUnreadChatMessageCount } from "@/lib/chat";
 import { t, type TranslationKey } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { getMentionLogs } from "@/lib/mentions";
@@ -51,7 +53,10 @@ export async function AppShell({
   children: ReactNode;
 }) {
   const locale = await getLocale();
-  const mentionCount = (await getMentionLogs(profile)).length;
+  const [mentionCount, chatUnreadCount] = await Promise.all([
+    getMentionLogs(profile).then((logs) => logs.length),
+    getUnreadChatMessageCount(profile.id),
+  ]);
   const mentionHandle = getMentionHandle(profile);
 
   return (
@@ -78,7 +83,16 @@ export async function AppShell({
               active={active === item.key}
               icon={<item.icon className="h-4 w-4" />}
               badge={
-                item.key === "mentions" ? (
+                item.key === "chat" ? (
+                  <ChatNavBadge
+                    key={`chat-desktop-${active === "chat"}-${chatUnreadCount}`}
+                    initialCount={chatUnreadCount}
+                    currentUserId={profile.id}
+                    channelKey="desktop"
+                    disabled={active === "chat"}
+                    className="ml-auto"
+                  />
+                ) : item.key === "mentions" ? (
                   <MentionNavBadge
                     initialCount={mentionCount}
                     handle={mentionHandle}
@@ -169,7 +183,19 @@ export async function AppShell({
               active === item.key && "text-emerald-700",
             )}
           >
-            <item.icon className="h-4 w-4" />
+            <span className="relative">
+              <item.icon className="h-4 w-4" />
+              {item.key === "chat" && (
+                <ChatNavBadge
+                  key={`chat-mobile-${active === "chat"}-${chatUnreadCount}`}
+                  initialCount={chatUnreadCount}
+                  currentUserId={profile.id}
+                    channelKey="mobile"
+                  disabled={active === "chat"}
+                  className="absolute -right-3 -top-2 min-w-5 border-2 border-white px-1.5 py-0 text-[10px]"
+                />
+              )}
+            </span>
             {t(locale, item.labelKey as TranslationKey)}
           </Link>
         ))}

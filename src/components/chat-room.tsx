@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { loadOlderChatMessages } from "@/app/(app)/chat/actions";
+import { loadOlderChatMessages, markChatRead } from "@/app/(app)/chat/actions";
 import { Button } from "@/components/button";
 import { Card } from "@/components/ui";
 import {
@@ -312,6 +312,14 @@ export function ChatRoom({
 
     return () => window.clearInterval(interval);
   }, [fetchNewerMessages, realtimeStatus]);
+
+  useEffect(() => {
+    if (!messages.at(-1)) {
+      return;
+    }
+
+    void markChatRead();
+  }, [messages]);
 
   useEffect(() => {
     if (didInitialScrollRef.current || !scrollRef.current) {

@@ -44,6 +44,36 @@ export async function getOlderChatMessages({
   return hydrateChatAuthors(((data ?? []) as ChatMessage[]).reverse());
 }
 
+export async function getUnreadChatMessageCount(userId: string) {
+  const supabase = await createSupabaseServerClient();
+  const { data: readState, error: readError } = await supabase
+    .from("chat_reads")
+    .select("last_read_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (readError) {
+    throw new Error(readError.message);
+  }
+
+  let query = supabase
+    .from("chat_messages")
+    .select("id", { count: "exact", head: true })
+    .neq("user_id", userId);
+
+  if (readState?.last_read_at) {
+    query = query.gt("created_at", readState.last_read_at);
+  }
+
+  const { count, error } = await query;
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return count ?? 0;
+}
+
 async function hydrateChatAuthors(messages: ChatMessage[]) {
   if (messages.length === 0) {
     return [];
