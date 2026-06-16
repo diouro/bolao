@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
 import {
   BarChart3,
   Bell,
@@ -15,12 +14,12 @@ import { Button } from "@/components/button";
 import { ChatNavBadge } from "@/components/chat-nav-badge";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { MentionNavBadge } from "@/components/mention-nav-badge";
+import { MobileNavLink, NavLink } from "@/components/nav-link";
 import { getUnreadChatMessageCount } from "@/lib/chat";
 import { t, type TranslationKey } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { getMentionLogs } from "@/lib/mentions";
 import { getMentionHandle } from "@/lib/profiles";
-import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
 
 const navItems = [
@@ -37,19 +36,9 @@ const mobileNavItems = navItems.filter((item) => item.key !== "mentions");
 
 export async function AppShell({
   profile,
-  active,
   children,
 }: {
   profile: Profile;
-  active:
-    | "dashboard"
-    | "predictions"
-    | "leaderboard"
-    | "breakdown"
-    | "chat"
-    | "mentions"
-    | "stats"
-    | "admin";
   children: ReactNode;
 }) {
   const locale = await getLocale();
@@ -80,16 +69,14 @@ export async function AppShell({
             <NavItem
               key={item.key}
               href={item.href}
-              active={active === item.key}
               icon={<item.icon className="h-4 w-4" />}
               badge={
                 item.key === "chat" ? (
                   <ChatNavBadge
-                    key={`chat-desktop-${active === "chat"}-${chatUnreadCount}`}
+                    key={`chat-desktop-${chatUnreadCount}`}
                     initialCount={chatUnreadCount}
                     currentUserId={profile.id}
                     channelKey="desktop"
-                    disabled={active === "chat"}
                     className="ml-auto"
                   />
                 ) : item.key === "mentions" ? (
@@ -107,7 +94,6 @@ export async function AppShell({
           {profile.role === "admin" && (
             <NavItem
               href="/admin/results"
-              active={active === "admin"}
               icon={<Shield className="h-4 w-4" />}
             >
               {t(locale, "app.resultsAdmin")}
@@ -175,29 +161,21 @@ export async function AppShell({
 
       <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-zinc-200 bg-white lg:hidden">
         {mobileNavItems.map((item) => (
-          <Link
-            key={item.key}
-            href={item.href}
-            className={cn(
-              "flex flex-col items-center gap-1 px-2 py-3 text-[11px] font-semibold text-zinc-500",
-              active === item.key && "text-emerald-700",
-            )}
-          >
+          <MobileNavLink key={item.key} href={item.href}>
             <span className="relative">
               <item.icon className="h-4 w-4" />
               {item.key === "chat" && (
                 <ChatNavBadge
-                  key={`chat-mobile-${active === "chat"}-${chatUnreadCount}`}
+                  key={`chat-mobile-${chatUnreadCount}`}
                   initialCount={chatUnreadCount}
                   currentUserId={profile.id}
-                    channelKey="mobile"
-                  disabled={active === "chat"}
+                  channelKey="mobile"
                   className="absolute -right-3 -top-2 min-w-5 border-2 border-white px-1.5 py-0 text-[10px]"
                 />
               )}
             </span>
             {t(locale, item.labelKey as TranslationKey)}
-          </Link>
+          </MobileNavLink>
         ))}
       </nav>
     </main>
@@ -218,28 +196,20 @@ function PaidBadge() {
 
 function NavItem({
   href,
-  active,
   icon,
   badge,
   children,
 }: {
   href: string;
-  active: boolean;
   icon: ReactNode;
   badge?: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <Link
-      href={href}
-      className={cn(
-        "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-zinc-600 transition hover:bg-zinc-50 hover:text-zinc-950",
-        active && "bg-emerald-50 text-emerald-700",
-      )}
-    >
+    <NavLink href={href}>
       {icon}
       <span className="min-w-0 flex-1 truncate">{children}</span>
       {badge}
-    </Link>
+    </NavLink>
   );
 }

@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/app-shell";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
@@ -16,7 +15,7 @@ export default async function LeaderboardPage() {
   const current = rows.find((row) => row.profile.id === profile.id);
 
   return (
-    <AppShell profile={profile} active="leaderboard">
+    <>
       <div className="mb-6">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
           {t(locale, "app.leaderboard")}
@@ -52,6 +51,6 @@ export default async function LeaderboardPage() {
       </div>
 
       <LeaderboardTable rows={rows} locale={locale} />
-    </AppShell>
+    </>
   );
 }

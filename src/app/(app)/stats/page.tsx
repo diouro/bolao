@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/app-shell";
 import { StatsCards } from "@/components/stats-cards";
 import { requireProfile } from "@/lib/auth";
 import { t } from "@/lib/i18n";
@@ -13,7 +12,7 @@ export default async function StatsPage() {
   const summary = await computeStats(profile.id);
 
   return (
-    <AppShell profile={profile} active="stats">
+    <>
       <div className="mb-6">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
           {t(locale, "stats.eyebrow")}
@@ -24,6 +23,6 @@ export default async function StatsPage() {
       </div>
 
       <StatsCards summary={summary} locale={locale} />
-    </AppShell>
+    </>
   );
 }

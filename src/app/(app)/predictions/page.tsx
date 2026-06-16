@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AppShell } from "@/components/app-shell";
 import { MatchCard } from "@/components/match-card";
 import { Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
@@ -86,7 +85,7 @@ export default async function PredictionsPage({
   );
 
   return (
-    <AppShell profile={profile} active="predictions">
+    <>
       <div className="mb-6">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
           {t(locale, "app.predictions")}
@@ -122,7 +121,7 @@ export default async function PredictionsPage({
           />
         )}
       </div>
-    </AppShell>
+    </>
   );
 }
 

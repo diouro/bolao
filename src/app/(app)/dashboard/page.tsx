@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/app-shell";
 import { MatchCard } from "@/components/match-card";
 import { Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
@@ -43,7 +42,7 @@ export default async function DashboardPage() {
   const picksMade = upcoming.filter((match) => match.prediction).length;
 
   return (
-    <AppShell profile={profile} active="dashboard">
+    <>
       <div className="mb-6">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
           Dashboard
@@ -84,7 +83,7 @@ export default async function DashboardPage() {
           </Card>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }
 

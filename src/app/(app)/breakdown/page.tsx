@@ -1,7 +1,5 @@
-import { AppShell } from "@/components/app-shell";
 import { PointsBreakdownTable } from "@/components/points-breakdown-table";
 import { Card } from "@/components/ui";
-import { requireProfile } from "@/lib/auth";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { getPointsBreakdown } from "@/lib/points-breakdown";
@@ -9,13 +7,12 @@ import { getPointsBreakdown } from "@/lib/points-breakdown";
 export const dynamic = "force-dynamic";
 
 export default async function BreakdownPage() {
-  const profile = await requireProfile();
   const locale = await getLocale();
   const breakdown = await getPointsBreakdown();
   const finishedMatches = breakdown.matches.length;
 
   return (
-    <AppShell profile={profile} active="breakdown">
+    <>
       <div className="mb-6">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
           {t(locale, "app.breakdown")}
@@ -38,7 +35,7 @@ export default async function BreakdownPage() {
       </div>
 
       <PointsBreakdownTable breakdown={breakdown} locale={locale} />
-    </AppShell>
+    </>
   );
 }
 

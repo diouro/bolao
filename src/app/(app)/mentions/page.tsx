@@ -1,6 +1,5 @@
 import { Bell } from "lucide-react";
 import { clearAllMentions } from "@/app/(app)/mentions/actions";
-import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/button";
 import { MentionLink } from "@/components/mention-link";
 import { Badge, Card } from "@/components/ui";
@@ -20,7 +19,7 @@ export default async function MentionsPage() {
   const handle = getMentionHandle(profile);
 
   return (
-    <AppShell profile={profile} active="mentions">
+    <>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
@@ -100,6 +99,6 @@ export default async function MentionsPage() {
           </Card>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }

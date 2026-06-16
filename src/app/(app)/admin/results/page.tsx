@@ -1,4 +1,3 @@
-import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/button";
 import { CountryFlag } from "@/components/country-flag";
 import { ResultForm } from "@/components/result-form";
@@ -15,7 +14,7 @@ import type { Match } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export default async function AdminResultsPage() {
-  const profile = await requireAdmin();
+  await requireAdmin();
   const locale = await getLocale();
   const matches = await getAllMatches();
   const nowMs = new Date().getTime();
@@ -25,7 +24,7 @@ export default async function AdminResultsPage() {
   });
 
   return (
-    <AppShell profile={profile} active="admin">
+    <>
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
@@ -59,7 +58,7 @@ export default async function AdminResultsPage() {
           </Card>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }
 

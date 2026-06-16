@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +14,7 @@ export function ChatNavBadge({
   initialCount,
   currentUserId,
   channelKey,
-  disabled = false,
+  disabled: disabledProp = false,
   className,
 }: {
   initialCount: number;
@@ -22,6 +23,9 @@ export function ChatNavBadge({
   disabled?: boolean;
   className?: string;
 }) {
+  const pathname = usePathname();
+  const isOnChatPage = pathname === "/chat" || pathname.startsWith("/chat/");
+  const disabled = disabledProp || isOnChatPage;
   const [count, setCount] = useState(disabled ? 0 : initialCount);
 
   useEffect(() => {

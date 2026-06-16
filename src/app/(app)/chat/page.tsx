@@ -1,5 +1,4 @@
 import { ChatRoom } from "@/components/chat-room";
-import { AppShell } from "@/components/app-shell";
 import { requireProfile } from "@/lib/auth";
 import { getLatestChatMessages } from "@/lib/chat";
 import { CHAT_MESSAGES_PAGE_SIZE } from "@/lib/chat-types";
@@ -19,7 +18,7 @@ export default async function ChatPage() {
   ]);
 
   return (
-    <AppShell profile={profile} active="chat">
+    <>
       <div className="mb-6">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
           {t(locale, "app.chat")}
@@ -36,6 +35,6 @@ export default async function ChatPage() {
         appTimeZone={getAppTimeZone()}
         locale={locale}
       />
-    </AppShell>
+    </>
   );
 }
