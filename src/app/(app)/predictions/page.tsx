@@ -148,7 +148,7 @@ function getDefaultFixtureCategory(
 
   const knockoutMatch = sameDayMatches.find((match) => match.round !== "group");
 
-  if (knockoutMatch && isKnockoutCategory(knockoutMatch.round)) {
+  if (knockoutMatch && isKnockoutRound(knockoutMatch.round)) {
     return knockoutMatch.round;
   }
 
@@ -171,6 +171,10 @@ function normalizeCategory(group?: string): FixtureCategory {
   return groupOrder.includes(normalized as GroupCategory)
     ? (normalized as GroupCategory)
     : "A";
+}
+
+function isKnockoutRound(round: TournamentRound): round is KnockoutCategory {
+  return knockoutRoundOrder.includes(round as KnockoutCategory);
 }
 
 function isKnockoutCategory(category: FixtureCategory): category is KnockoutCategory {
