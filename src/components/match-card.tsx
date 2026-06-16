@@ -10,12 +10,14 @@ import { t, type Locale, type TranslationKey } from "@/lib/i18n";
 import { isPredictionEditable } from "@/lib/predictions/lock";
 import { calculatePoints } from "@/lib/scoring/calculate-points";
 import { resolveMatchSide } from "@/lib/tournament/resolve-slots";
+import type { DashboardMatchPhase } from "@/lib/match-day";
 import type {
   MatchComment,
   MatchFriendPrediction,
   MatchWithPrediction,
   MentionableUser,
 } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const roundLabelKeys: Record<string, TranslationKey> = {
   group: "common.group",
@@ -30,6 +32,7 @@ const roundLabelKeys: Record<string, TranslationKey> = {
 export function MatchCard({
   match,
   lockMinutes,
+  appearance = "default",
   comments = [],
   friendPredictions = [],
   mentionableUsers = [],
@@ -38,6 +41,7 @@ export function MatchCard({
 }: {
   match: MatchWithPrediction;
   lockMinutes: number;
+  appearance?: DashboardMatchPhase | "default";
   comments?: MatchComment[];
   friendPredictions?: MatchFriendPrediction[];
   mentionableUsers?: MentionableUser[];
@@ -63,10 +67,30 @@ export function MatchCard({
       })
     : null;
 
+  const isLive = appearance === "live";
+  const isFinished = appearance === "finished";
+
   return (
     <div id={`match-${match.id}`} className="scroll-mt-28">
-      <Card className="overflow-hidden p-0">
-      <div className="border-b border-zinc-100 bg-gradient-to-r from-zinc-50 via-white to-zinc-50 px-5 py-4 sm:px-6">
+      <Card
+        className={cn(
+          "overflow-hidden p-0",
+          isLive && "ring-2 ring-emerald-500/25",
+          isFinished && "border-zinc-200/80 bg-zinc-100/40",
+        )}
+      >
+      <div
+        className={cn(
+          "border-b px-5 py-4 sm:px-6",
+          isLive &&
+            "border-emerald-100 bg-gradient-to-r from-emerald-50/80 via-white to-emerald-50/80",
+          isFinished &&
+            "border-zinc-200/80 bg-gradient-to-r from-zinc-100/90 via-zinc-50/90 to-zinc-100/90",
+          !isLive &&
+            !isFinished &&
+            "border-zinc-100 bg-gradient-to-r from-zinc-50 via-white to-zinc-50",
+        )}
+      >
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex gap-2">
             <Badge className="bg-white shadow-sm">
@@ -75,6 +99,11 @@ export function MatchCard({
             {match.group_code && (
               <Badge className="bg-emerald-50 text-emerald-700">
                 {t(locale, "common.group")} {match.group_code}
+              </Badge>
+            )}
+            {isLive && (
+              <Badge className="bg-emerald-600 text-white">
+                {t(locale, "match.live")}
               </Badge>
             )}
           </div>
@@ -103,6 +132,7 @@ export function MatchCard({
             status={match.status}
             hasSavedPrediction={hasSavedPrediction}
             locked
+            muted={isFinished}
             locale={locale}
           />
         </>
@@ -127,6 +157,7 @@ export function MatchCard({
             points={points}
             status={match.status}
             hasSavedPrediction={hasSavedPrediction}
+            muted={isFinished}
             locale={locale}
           />
         </PendingForm>
@@ -315,16 +346,25 @@ function MatchFooter({
   status,
   hasSavedPrediction,
   locked = false,
+  muted = false,
   locale,
 }: {
   points: ReturnType<typeof calculatePoints> | null;
   status: string;
   hasSavedPrediction: boolean;
   locked?: boolean;
+  muted?: boolean;
   locale: Locale;
 }) {
   return (
-    <div className="flex flex-col gap-4 border-t border-zinc-100 bg-zinc-50/70 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <div
+      className={cn(
+        "flex flex-col gap-4 border-t px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6",
+        muted
+          ? "border-zinc-200/80 bg-zinc-100/70"
+          : "border-zinc-100 bg-zinc-50/70",
+      )}
+    >
       <div>
         <div className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
           {t(locale, "match.yourPrediction")}

@@ -100,6 +100,7 @@ const messages = {
     "dashboard.empty.body":
       "Once fixtures are seeded, upcoming matches will appear here.",
     "dashboard.empty.title": "No upcoming matches.",
+    "dashboard.finished": "Finished",
     "dashboard.missing": "Missing picks",
     "dashboard.picksMade": "Picks made",
     "dashboard.title": "Your next predictions",
@@ -143,6 +144,7 @@ const messages = {
     "match.exactScore": "exact score",
     "match.fullTime": "Full time",
     "match.inputHint": "Enter the exact score above",
+    "match.live": "Live",
     "match.lockedIn": "Locked in",
     "match.noPrediction": "No prediction saved",
     "match.resultHit": "result hit",
@@ -264,6 +266,7 @@ const messages = {
     "dashboard.empty.body":
       "Quando os jogos forem carregados, eles aparecerão aqui.",
     "dashboard.empty.title": "Nenhum próximo jogo.",
+    "dashboard.finished": "Encerrados",
     "dashboard.missing": "Palpites faltando",
     "dashboard.picksMade": "Palpites feitos",
     "dashboard.title": "Seus próximos palpites",
@@ -307,6 +310,7 @@ const messages = {
     "match.exactScore": "placar exato",
     "match.fullTime": "Fim de jogo",
     "match.inputHint": "Digite o placar exato acima",
+    "match.live": "Ao vivo",
     "match.lockedIn": "Travado",
     "match.noPrediction": "Nenhum palpite salvo",
     "match.resultHit": "resultado certo",

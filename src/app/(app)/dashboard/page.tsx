@@ -2,7 +2,11 @@ import { MatchCard } from "@/components/match-card";
 import { Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
 import { getMatchCommentsForMatches } from "@/lib/comments";
-import { getMatchesForNextMatchDay } from "@/lib/match-day";
+import {
+  getDashboardMatchPhase,
+  getMatchesForNextMatchDay,
+  sortDashboardMatches,
+} from "@/lib/match-day";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import {
@@ -21,7 +25,10 @@ export default async function DashboardPage() {
   const matches = await getMatchesWithUserPredictions(profile.id);
   const lockMinutes = await getPredictionLockMinutes();
   const now = new Date();
-  const upcoming = getMatchesForNextMatchDay(matches, now);
+  const upcoming = sortDashboardMatches(
+    getMatchesForNextMatchDay(matches, now),
+    now,
+  );
   const editableMatches = upcoming.filter((match) =>
     isPredictionEditable({
       kickoffAt: match.kickoff_at,
@@ -38,6 +45,12 @@ export default async function DashboardPage() {
   );
   const missingPicks = editableMatches.filter((match) => !match.prediction).length;
   const picksMade = upcoming.filter((match) => match.prediction).length;
+  const activeMatches = upcoming.filter(
+    (match) => getDashboardMatchPhase(match, now) !== "finished",
+  );
+  const finishedMatches = upcoming.filter(
+    (match) => getDashboardMatchPhase(match, now) === "finished",
+  );
 
   return (
     <>
@@ -58,18 +71,39 @@ export default async function DashboardPage() {
 
       <div className="grid gap-4">
         {upcoming.length > 0 ? (
-          upcoming.map((match) => (
-            <MatchCard
-              key={match.id}
-              match={match}
-              lockMinutes={lockMinutes}
-              comments={commentsByMatch.get(match.id) ?? []}
-              friendPredictions={friendPredictionsByMatch.get(match.id) ?? []}
-              mentionableUsers={mentionableUsers}
-              currentUserId={profile.id}
-              locale={locale}
-            />
-          ))
+          <>
+            {activeMatches.map((match) => (
+              <MatchCard
+                key={match.id}
+                match={match}
+                appearance={getDashboardMatchPhase(match, now)}
+                lockMinutes={lockMinutes}
+                comments={commentsByMatch.get(match.id) ?? []}
+                friendPredictions={friendPredictionsByMatch.get(match.id) ?? []}
+                mentionableUsers={mentionableUsers}
+                currentUserId={profile.id}
+                locale={locale}
+              />
+            ))}
+            {finishedMatches.length > 0 && activeMatches.length > 0 && (
+              <DashboardSectionHeader
+                label={t(locale, "dashboard.finished")}
+              />
+            )}
+            {finishedMatches.map((match) => (
+              <MatchCard
+                key={match.id}
+                match={match}
+                appearance="finished"
+                lockMinutes={lockMinutes}
+                comments={commentsByMatch.get(match.id) ?? []}
+                friendPredictions={friendPredictionsByMatch.get(match.id) ?? []}
+                mentionableUsers={mentionableUsers}
+                currentUserId={profile.id}
+                locale={locale}
+              />
+            ))}
+          </>
         ) : (
           <Card>
             <p className="font-semibold text-zinc-950">
@@ -91,5 +125,17 @@ function Metric({ label, value }: { label: string; value: number }) {
       <div className="text-3xl font-black text-zinc-950">{value}</div>
       <div className="mt-1 text-sm font-medium text-zinc-500">{label}</div>
     </Card>
+  );
+}
+
+function DashboardSectionHeader({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-4 py-3">
+      <div className="h-0.5 flex-1 rounded-full bg-zinc-300" />
+      <h2 className="rounded-full border border-zinc-300 bg-zinc-200/80 px-5 py-2 text-sm font-black uppercase tracking-[0.15em] text-zinc-700 shadow-sm">
+        {label}
+      </h2>
+      <div className="h-0.5 flex-1 rounded-full bg-zinc-300" />
+    </div>
   );
 }
