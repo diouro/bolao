@@ -5,6 +5,7 @@ import {
   getSupabaseUrl,
   hasSupabaseEnv,
 } from "@/lib/env";
+import { getSupabaseCookieOptions } from "@/lib/supabase/cookie-options";
 
 export async function createSupabaseServerClient() {
   if (!hasSupabaseEnv()) {
@@ -14,6 +15,7 @@ export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
 
   return createServerClient(getSupabaseUrl(), getSupabasePublicKey(), {
+    cookieOptions: getSupabaseCookieOptions(),
     cookies: {
       getAll() {
         return cookieStore.getAll();

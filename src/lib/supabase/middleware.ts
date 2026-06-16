@@ -5,6 +5,7 @@ import {
   getSupabaseUrl,
   hasSupabaseEnv,
 } from "@/lib/env";
+import { getSupabaseCookieOptions } from "@/lib/supabase/cookie-options";
 
 const protectedPrefixes = [
   "/dashboard",
@@ -30,16 +31,22 @@ export async function updateSession(request: NextRequest) {
     getSupabaseUrl(),
     getSupabasePublicKey(),
     {
+      cookieOptions: getSupabaseCookieOptions(),
       cookies: {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet, headers) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
           });
+          if (headers) {
+            Object.entries(headers).forEach(([key, value]) => {
+              response.headers.set(key, value);
+            });
+          }
         },
       },
     },

@@ -45,6 +45,12 @@ export async function loginWithEmail(formData: FormData) {
     throw new Error(error.message);
   }
 
+  const { error: sessionError } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw new Error(sessionError.message);
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -115,6 +121,12 @@ export async function registerWithEmail(formData: FormData) {
 
   if (signInError) {
     throw new Error(signInError.message);
+  }
+
+  const { error: sessionError } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw new Error(sessionError.message);
   }
 
   redirect(safeNext(values.next));
