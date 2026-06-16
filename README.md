@@ -84,14 +84,20 @@ times, and results aligned with the external provider.
 
 ## Scoring
 
-- Exact score: 5 points
-- Correct result only: 2 points
+- Exact score: 3 points
+- Correct outcome only: 1 point
 - Wrong result: 0 points
 
 Leaderboard tiebreakers are total points, exact hits, then earliest signup.
 
 Predictions lock 5 minutes before kickoff by default. To change the lock
 window, update the `prediction_lock_minutes` row in `app_settings`.
+
+## Payments
+
+Friends can tip in `$5`. Payment is tracked manually in the database by setting
+`profiles.has_paid = true`. Paid players show a green tick beside their profile,
+and the leaderboard displays the current prize pool as paid players times `$5`.
 
 ## Result Sync
 

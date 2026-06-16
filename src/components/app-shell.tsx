@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { BarChart3, ListChecks, LogOut, Shield, Trophy } from "lucide-react";
+import { BarChart3, Check, ListChecks, LogOut, Shield, Trophy } from "lucide-react";
 import { logout } from "@/app/actions";
 import { Button } from "@/components/button";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ const navItems = [
   { key: "dashboard", label: "Dashboard", href: "/dashboard", icon: ListChecks },
   { key: "predictions", label: "Predictions", href: "/predictions", icon: Trophy },
   { key: "leaderboard", label: "Leaderboard", href: "/leaderboard", icon: BarChart3 },
+  { key: "breakdown", label: "Breakdown", href: "/breakdown", icon: ListChecks },
   { key: "stats", label: "Stats", href: "/stats", icon: BarChart3 },
 ];
 
@@ -19,7 +20,13 @@ export function AppShell({
   children,
 }: {
   profile: Profile;
-  active: "dashboard" | "predictions" | "leaderboard" | "stats" | "admin";
+  active:
+    | "dashboard"
+    | "predictions"
+    | "leaderboard"
+    | "breakdown"
+    | "stats"
+    | "admin";
   children: ReactNode;
 }) {
   return (
@@ -60,12 +67,15 @@ export function AppShell({
           )}
         </nav>
         <div className="border-t border-zinc-200 p-4">
-          <p className="truncate text-sm font-semibold text-zinc-950">
-            {profile.display_name ?? profile.email}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="min-w-0 truncate text-sm font-semibold text-zinc-950">
+              {profile.display_name ?? profile.email}
+            </p>
+            {profile.has_paid && <PaidBadge />}
+          </div>
           <p className="truncate text-xs text-zinc-500">{profile.email}</p>
           <form action={logout} className="mt-4">
-            <input type="hidden" name="redirectTo" value="/login" />
+            <input type="hidden" name="redirectTo" value="/signin" />
             <Button
               className="h-10 w-full border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
               pendingChildren="Logging out"
@@ -85,12 +95,15 @@ export function AppShell({
                 <Trophy className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-black text-zinc-950">Bolão</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-black text-zinc-950">Bolão</p>
+                  {profile.has_paid && <PaidBadge />}
+                </div>
                 <p className="text-xs text-zinc-500">{profile.email}</p>
               </div>
             </div>
             <form action={logout}>
-              <input type="hidden" name="redirectTo" value="/login" />
+              <input type="hidden" name="redirectTo" value="/signin" />
               <Button
                 className="h-10 w-10 border border-zinc-200 bg-white p-0 text-zinc-700 hover:bg-zinc-50"
                 pendingChildren={<span className="sr-only">Logging out</span>}
@@ -106,7 +119,7 @@ export function AppShell({
         </div>
       </section>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-zinc-200 bg-white lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-zinc-200 bg-white lg:hidden">
         {navItems.map((item) => (
           <Link
             key={item.key}
@@ -122,6 +135,18 @@ export function AppShell({
         ))}
       </nav>
     </main>
+  );
+}
+
+function PaidBadge() {
+  return (
+    <span
+      className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white"
+      title="Paid"
+      aria-label="Paid"
+    >
+      <Check className="h-3 w-3" />
+    </span>
   );
 }
 

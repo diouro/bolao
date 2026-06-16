@@ -46,6 +46,7 @@ export type Profile = {
   email: string;
   avatar_url: string | null;
   role: ProfileRole;
+  has_paid: boolean;
   created_at: string;
 };
 
@@ -78,6 +79,30 @@ export type Prediction = {
   away_score: number;
   created_at: string;
   updated_at: string;
+};
+
+export type MatchComment = {
+  id: string;
+  match_id: string;
+  user_id: string;
+  body: string;
+  created_at: string;
+  author_name: string | null;
+  author_email: string | null;
+};
+
+export type MatchFriendPrediction = Prediction & {
+  display_name: string | null;
+  email: string | null;
+  has_paid: boolean;
+};
+
+export type MentionableUser = {
+  id: string;
+  label: string;
+  handle: string;
+  email: string;
+  has_paid: boolean;
 };
 
 export type MatchWithPrediction = Match & {

@@ -2,6 +2,8 @@ import { calculatePoints } from "@/lib/scoring/calculate-points";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Match, Prediction, Profile } from "@/lib/types";
 
+export const ENTRY_PRICE_DOLLARS = 5;
+
 export type LeaderboardRow = {
   rank: number;
   profile: Profile;
@@ -11,7 +13,13 @@ export type LeaderboardRow = {
   predictions: number;
 };
 
-export async function getLeaderboard() {
+export type Leaderboard = {
+  rows: LeaderboardRow[];
+  paidPlayers: number;
+  prizePoolDollars: number;
+};
+
+export async function getLeaderboard(): Promise<Leaderboard> {
   const supabase = await createSupabaseServerClient();
   const [
     { data: profiles, error: profilesError },
@@ -93,8 +101,17 @@ export async function getLeaderboard() {
     );
   });
 
-  return rows.map((row, index) => ({
+  const rankedRows = rows.map((row, index) => ({
     ...row,
     rank: index + 1,
   })) satisfies LeaderboardRow[];
+  const paidPlayers = ((profiles ?? []) as Profile[]).filter(
+    (profile) => profile.has_paid,
+  ).length;
+
+  return {
+    rows: rankedRows,
+    paidPlayers,
+    prizePoolDollars: paidPlayers * ENTRY_PRICE_DOLLARS,
+  };
 }

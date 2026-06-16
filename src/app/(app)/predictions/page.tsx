@@ -3,9 +3,20 @@ import { AppShell } from "@/components/app-shell";
 import { MatchCard } from "@/components/match-card";
 import { Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
-import { getMatchesWithUserPredictions } from "@/lib/matches";
+import { getMatchCommentsForMatches } from "@/lib/comments";
+import {
+  getFriendPredictionsForMatches,
+  getMatchesWithUserPredictions,
+} from "@/lib/matches";
 import { getPredictionLockMinutes } from "@/lib/predictions/settings";
-import type { MatchWithPrediction, TournamentRound } from "@/lib/types";
+import { getMentionableUsers } from "@/lib/profiles";
+import type {
+  MatchComment,
+  MatchFriendPrediction,
+  MatchWithPrediction,
+  MentionableUser,
+  TournamentRound,
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -52,6 +63,15 @@ export default async function PredictionsPage({
             match.round === "group" && match.group_code === selectedCategory,
         );
   const knockoutMatches = matches.filter((match) => match.round !== "group");
+  const displayedMatches =
+    selectedCategory === "knockout" ? knockoutMatches : groupMatches;
+  const commentsByMatch = await getMatchCommentsForMatches(
+    displayedMatches.map((match) => match.id),
+  );
+  const mentionableUsers = await getMentionableUsers();
+  const friendPredictionsByMatch = await getFriendPredictionsForMatches(
+    displayedMatches.map((match) => match.id),
+  );
 
   return (
     <AppShell profile={profile} active="predictions">
@@ -71,12 +91,23 @@ export default async function PredictionsPage({
       <div className="space-y-6">
         <FixtureNavigation selectedCategory={selectedCategory} />
         {selectedCategory === "knockout" ? (
-          <KnockoutStage matches={knockoutMatches} lockMinutes={lockMinutes} />
+          <KnockoutStage
+            matches={knockoutMatches}
+            lockMinutes={lockMinutes}
+            commentsByMatch={commentsByMatch}
+            friendPredictionsByMatch={friendPredictionsByMatch}
+            mentionableUsers={mentionableUsers}
+            currentUserId={profile.id}
+          />
         ) : (
           <GroupFixture
             group={selectedCategory}
             matches={groupMatches}
             lockMinutes={lockMinutes}
+            commentsByMatch={commentsByMatch}
+            friendPredictionsByMatch={friendPredictionsByMatch}
+            mentionableUsers={mentionableUsers}
+            currentUserId={profile.id}
           />
         )}
       </div>
@@ -133,10 +164,18 @@ function GroupFixture({
   group,
   matches,
   lockMinutes,
+  commentsByMatch,
+  friendPredictionsByMatch,
+  mentionableUsers,
+  currentUserId,
 }: {
   group: string;
   matches: MatchWithPrediction[];
   lockMinutes: number;
+  commentsByMatch: Map<string, MatchComment[]>;
+  friendPredictionsByMatch: Map<string, MatchFriendPrediction[]>;
+  mentionableUsers: MentionableUser[];
+  currentUserId: string;
 }) {
   return (
     <section>
@@ -157,7 +196,15 @@ function GroupFixture({
       </Card>
       <div className="grid gap-4">
         {matches.map((match) => (
-          <MatchCard key={match.id} match={match} lockMinutes={lockMinutes} />
+          <MatchCard
+            key={match.id}
+            match={match}
+            lockMinutes={lockMinutes}
+            comments={commentsByMatch.get(match.id) ?? []}
+            friendPredictions={friendPredictionsByMatch.get(match.id) ?? []}
+            mentionableUsers={mentionableUsers}
+            currentUserId={currentUserId}
+          />
         ))}
       </div>
     </section>
@@ -167,9 +214,17 @@ function GroupFixture({
 function KnockoutStage({
   matches,
   lockMinutes,
+  commentsByMatch,
+  friendPredictionsByMatch,
+  mentionableUsers,
+  currentUserId,
 }: {
   matches: MatchWithPrediction[];
   lockMinutes: number;
+  commentsByMatch: Map<string, MatchComment[]>;
+  friendPredictionsByMatch: Map<string, MatchFriendPrediction[]>;
+  mentionableUsers: MentionableUser[];
+  currentUserId: string;
 }) {
   return (
     <section className="space-y-8">
@@ -205,6 +260,10 @@ function KnockoutStage({
                     key={match.id}
                     match={match}
                     lockMinutes={lockMinutes}
+                    comments={commentsByMatch.get(match.id) ?? []}
+                    friendPredictions={friendPredictionsByMatch.get(match.id) ?? []}
+                    mentionableUsers={mentionableUsers}
+                    currentUserId={currentUserId}
                   />
                 ))}
               </div>

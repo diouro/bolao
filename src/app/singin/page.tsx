@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-export default async function LoginPage({
+export default async function SingInTypoPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string }>;

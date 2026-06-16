@@ -187,7 +187,7 @@ run_database_migrations() {
   echo "Running Supabase migrations from supabase/migrations..."
   npx supabase db push --db-url "$database_url"
 
-  echo "Seeding fixtures from data/world-cup-2026.json..."
+  echo "Syncing fixtures from football-data.org..."
   export_env_file
   npm run seed:fixtures
 }

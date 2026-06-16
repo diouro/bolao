@@ -36,7 +36,7 @@ export function calculatePoints({
     resultOf(predictionHome, predictionAway) === resultOf(actualHome, actualAway);
 
   return {
-    points: exact ? 5 : result ? 2 : 0,
+    points: exact ? 3 : result ? 1 : 0,
     exact,
     result,
   };

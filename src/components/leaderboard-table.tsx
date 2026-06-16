@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import type { LeaderboardRow } from "@/lib/leaderboard";
 
 export function LeaderboardTable({ rows }: { rows: LeaderboardRow[] }) {
@@ -22,8 +23,19 @@ export function LeaderboardTable({ rows }: { rows: LeaderboardRow[] }) {
           >
             <div className="text-lg font-black text-zinc-950">#{row.rank}</div>
             <div className="min-w-0">
-              <div className="truncate font-semibold text-zinc-950">
-                {row.profile.display_name ?? row.profile.email}
+              <div className="flex items-center gap-2">
+                <div className="truncate font-semibold text-zinc-950">
+                  {row.profile.display_name ?? row.profile.email}
+                </div>
+                {row.profile.has_paid && (
+                  <span
+                    className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white"
+                    title="Paid"
+                    aria-label="Paid"
+                  >
+                    <Check className="h-3 w-3" />
+                  </span>
+                )}
               </div>
               <div className="truncate text-sm text-zinc-500">{row.profile.email}</div>
             </div>

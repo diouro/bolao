@@ -1,12 +1,19 @@
 import { savePrediction } from "@/app/(app)/predictions/actions";
 import { Button } from "@/components/button";
 import { CountryFlag } from "@/components/country-flag";
+import { MatchComments } from "@/components/match-comments";
+import { MatchFriendPredictions } from "@/components/match-friend-predictions";
 import { PendingForm } from "@/components/pending-form";
 import { Badge, Card, Input } from "@/components/ui";
 import { isPredictionLocked } from "@/lib/predictions/lock";
 import { calculatePoints } from "@/lib/scoring/calculate-points";
 import { resolveMatchSide } from "@/lib/tournament/resolve-slots";
-import type { MatchWithPrediction } from "@/lib/types";
+import type {
+  MatchComment,
+  MatchFriendPrediction,
+  MatchWithPrediction,
+  MentionableUser,
+} from "@/lib/types";
 
 const roundLabels: Record<string, string> = {
   group: "Group",
@@ -21,9 +28,17 @@ const roundLabels: Record<string, string> = {
 export function MatchCard({
   match,
   lockMinutes,
+  comments = [],
+  friendPredictions = [],
+  mentionableUsers = [],
+  currentUserId,
 }: {
   match: MatchWithPrediction;
   lockMinutes: number;
+  comments?: MatchComment[];
+  friendPredictions?: MatchFriendPrediction[];
+  mentionableUsers?: MentionableUser[];
+  currentUserId: string;
 }) {
   const home = resolveMatchSide(match, "home");
   const away = resolveMatchSide(match, "away");
@@ -110,6 +125,16 @@ export function MatchCard({
           />
         </PendingForm>
       )}
+      <MatchFriendPredictions
+        predictions={friendPredictions}
+        currentUserId={currentUserId}
+      />
+      <MatchComments
+        matchId={match.id}
+        comments={comments}
+        mentionableUsers={mentionableUsers}
+        currentUserId={currentUserId}
+      />
     </Card>
   );
 }

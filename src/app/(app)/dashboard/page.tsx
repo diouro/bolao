@@ -2,8 +2,14 @@ import { AppShell } from "@/components/app-shell";
 import { MatchCard } from "@/components/match-card";
 import { Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
-import { getMatchesWithUserPredictions } from "@/lib/matches";
+import { getMatchCommentsForMatches } from "@/lib/comments";
+import {
+  getFriendPredictionsForMatches,
+  getMatchesWithUserPredictions,
+} from "@/lib/matches";
+import { isPredictionLocked } from "@/lib/predictions/lock";
 import { getPredictionLockMinutes } from "@/lib/predictions/settings";
+import { getMentionableUsers } from "@/lib/profiles";
 
 export const dynamic = "force-dynamic";
 
@@ -11,14 +17,25 @@ export default async function DashboardPage() {
   const profile = await requireProfile();
   const matches = await getMatchesWithUserPredictions(profile.id);
   const lockMinutes = await getPredictionLockMinutes();
-  const nowMs = new Date().getTime();
-  const upcoming = matches
-    .filter((match) => new Date(match.kickoff_at).getTime() > nowMs)
-    .slice(0, 8);
-  const missingPicks = matches.filter(
+  const now = new Date();
+  const openMatches = matches.filter(
     (match) =>
-      new Date(match.kickoff_at).getTime() > nowMs && !match.prediction,
-  ).length;
+      match.status === "scheduled" &&
+      !isPredictionLocked({
+        kickoffAt: match.kickoff_at,
+        lockMinutes,
+        now,
+      }),
+  );
+  const upcoming = openMatches.slice(0, 8);
+  const commentsByMatch = await getMatchCommentsForMatches(
+    upcoming.map((match) => match.id),
+  );
+  const mentionableUsers = await getMentionableUsers();
+  const friendPredictionsByMatch = await getFriendPredictionsForMatches(
+    upcoming.map((match) => match.id),
+  );
+  const missingPicks = openMatches.filter((match) => !match.prediction).length;
 
   return (
     <AppShell profile={profile} active="dashboard">
@@ -47,7 +64,15 @@ export default async function DashboardPage() {
       <div className="grid gap-4">
         {upcoming.length > 0 ? (
           upcoming.map((match) => (
-            <MatchCard key={match.id} match={match} lockMinutes={lockMinutes} />
+            <MatchCard
+              key={match.id}
+              match={match}
+              lockMinutes={lockMinutes}
+              comments={commentsByMatch.get(match.id) ?? []}
+              friendPredictions={friendPredictionsByMatch.get(match.id) ?? []}
+              mentionableUsers={mentionableUsers}
+              currentUserId={profile.id}
+            />
           ))
         ) : (
           <Card>

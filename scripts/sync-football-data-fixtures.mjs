@@ -73,7 +73,11 @@ if (error) {
   throw new Error(error.message);
 }
 
-console.log(`Synced ${rows.length} World Cup fixtures from football-data.org.`);
+const dedupeSummary = await mergeDuplicateApiFixtures();
+
+console.log(
+  `Synced ${rows.length} World Cup fixtures from football-data.org. Removed ${dedupeSummary.removed} duplicate JSON fixture${dedupeSummary.removed === 1 ? "" : "s"}.`,
+);
 
 async function fetchFootballDataMatches() {
   const params = new URLSearchParams({ season });
@@ -192,4 +196,134 @@ function normalizeCode(code) {
 
 function stringifyId(id) {
   return id === null || id === undefined ? null : String(id);
+}
+
+async function mergeDuplicateApiFixtures() {
+  const { data: matches, error: matchesError } = await supabase
+    .from("matches")
+    .select("*")
+    .order("kickoff_at", { ascending: true });
+
+  if (matchesError) {
+    throw new Error(matchesError.message);
+  }
+
+  const apiMatchesByFixtureKey = new Map();
+
+  for (const match of matches ?? []) {
+    if (match.external_provider !== providerName || !match.external_match_id) {
+      continue;
+    }
+
+    const key = fixtureKey(match);
+
+    if (key) {
+      apiMatchesByFixtureKey.set(key, match);
+    }
+  }
+
+  let removed = 0;
+
+  for (const staleMatch of matches ?? []) {
+    if (staleMatch.external_provider || staleMatch.external_match_id) {
+      continue;
+    }
+
+    const replacement = apiMatchesByFixtureKey.get(fixtureKey(staleMatch));
+
+    if (!replacement || replacement.id === staleMatch.id) {
+      continue;
+    }
+
+    await movePredictions(staleMatch.id, replacement.id);
+    await moveComments(staleMatch.id, replacement.id);
+
+    const { error: deleteError } = await supabase
+      .from("matches")
+      .delete()
+      .eq("id", staleMatch.id);
+
+    if (deleteError) {
+      throw new Error(deleteError.message);
+    }
+
+    removed += 1;
+  }
+
+  return { removed };
+}
+
+function fixtureKey(match) {
+  if (!match.home_team_code || !match.away_team_code) {
+    return null;
+  }
+
+  return [
+    match.tournament_id,
+    match.round,
+    match.group_code ?? "",
+    match.home_team_code,
+    match.away_team_code,
+  ].join(":");
+}
+
+async function movePredictions(fromMatchId, toMatchId) {
+  const [
+    { data: stalePredictions, error: staleError },
+    { data: existingPredictions, error: existingError },
+  ] = await Promise.all([
+    supabase.from("predictions").select("*").eq("match_id", fromMatchId),
+    supabase.from("predictions").select("user_id").eq("match_id", toMatchId),
+  ]);
+
+  if (staleError) {
+    throw new Error(staleError.message);
+  }
+
+  if (existingError) {
+    throw new Error(existingError.message);
+  }
+
+  const existingUserIds = new Set(
+    (existingPredictions ?? []).map((prediction) => prediction.user_id),
+  );
+  const predictionsToMove = (stalePredictions ?? [])
+    .filter((prediction) => !existingUserIds.has(prediction.user_id))
+    .map((prediction) => ({
+      ...prediction,
+      match_id: toMatchId,
+    }));
+
+  if (predictionsToMove.length > 0) {
+    const { error: upsertError } = await supabase
+      .from("predictions")
+      .upsert(predictionsToMove, {
+        onConflict: "user_id,match_id",
+        ignoreDuplicates: true,
+      });
+
+    if (upsertError) {
+      throw new Error(upsertError.message);
+    }
+  }
+
+  const { error: deleteError } = await supabase
+    .from("predictions")
+    .delete()
+    .eq("match_id", fromMatchId);
+
+  if (deleteError) {
+    throw new Error(deleteError.message);
+  }
+}
+
+async function moveComments(fromMatchId, toMatchId) {
+  const { error } = await supabase
+    .from("match_comments")
+    .update({ match_id: toMatchId })
+    .eq("match_id", fromMatchId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }

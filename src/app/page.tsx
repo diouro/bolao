@@ -19,7 +19,7 @@ export default function Home() {
               <h1 className="text-lg font-bold text-zinc-950">Bolão</h1>
             </div>
           </div>
-          <Link href="/login">
+          <Link href="/signup">
             <Button>Join the game</Button>
           </Link>
         </nav>
@@ -38,7 +38,7 @@ export default function Home() {
               for now: no cards, scorers, corners, or betting.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/login">
+              <Link href="/signup">
                 <Button className="w-full bg-emerald-600 hover:bg-emerald-700 sm:w-auto">
                   Start predicting
                 </Button>
