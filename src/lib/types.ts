@@ -47,6 +47,7 @@ export type Profile = {
   avatar_url: string | null;
   role: ProfileRole;
   has_paid: boolean;
+  deleted_at: string | null;
   created_at: string;
 };
 

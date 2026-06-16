@@ -105,9 +105,7 @@ export async function getLeaderboard(): Promise<Leaderboard> {
     ...row,
     rank: index + 1,
   })) satisfies LeaderboardRow[];
-  const paidPlayers = ((profiles ?? []) as Profile[]).filter(
-    (profile) => profile.has_paid,
-  ).length;
+  const paidPlayers = ((profiles ?? []) as Profile[]).filter((profile) => profile.has_paid).length;
 
   return {
     rows: rankedRows,

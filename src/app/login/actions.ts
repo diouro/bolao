@@ -45,6 +45,20 @@ export async function loginWithEmail(formData: FormData) {
     throw new Error(error.message);
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", user?.id ?? "")
+    .maybeSingle();
+
+  if (profileError || !profile) {
+    await supabase.auth.signOut();
+    throw new Error("This account is no longer active.");
+  }
+
   redirect(safeNext(values.next));
 }
 
