@@ -2,12 +2,15 @@ import { AppShell } from "@/components/app-shell";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 import { getLeaderboard } from "@/lib/leaderboard";
 
 export const dynamic = "force-dynamic";
 
 export default async function LeaderboardPage() {
   const profile = await requireProfile();
+  const locale = await getLocale();
   const leaderboard = await getLeaderboard();
   const { rows, paidPlayers, prizePoolDollars } = leaderboard;
   const current = rows.find((row) => row.profile.id === profile.id);
@@ -16,10 +19,10 @@ export default async function LeaderboardPage() {
     <AppShell profile={profile} active="leaderboard">
       <div className="mb-6">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
-          Leaderboard
+          {t(locale, "app.leaderboard")}
         </p>
         <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
-          Friend ranking
+          {t(locale, "leaderboard.friendRanking")}
         </h1>
       </div>
 
@@ -27,25 +30,28 @@ export default async function LeaderboardPage() {
         {current && (
           <Card className="bg-emerald-50">
             <p className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
-              Your position
+              {t(locale, "leaderboard.position")}
             </p>
             <div className="mt-2 text-3xl font-black text-zinc-950">
-              #{current.rank} · {current.totalPoints} points
+              #{current.rank} · {current.totalPoints} {t(locale, "common.points")}
             </div>
           </Card>
         )}
         <Card className="bg-zinc-950 text-white">
           <p className="text-sm font-semibold uppercase tracking-wide text-emerald-300">
-            Prize pool
+            {t(locale, "leaderboard.prizePool")}
           </p>
           <div className="mt-2 text-4xl font-black">${prizePoolDollars}</div>
           <p className="mt-2 text-sm text-zinc-300">
-            {paidPlayers} paid friend{paidPlayers === 1 ? "" : "s"} · $5 each
+            {t(locale, "leaderboard.paidFriends", {
+              count: paidPlayers,
+              plural: paidPlayers === 1 ? "" : "s",
+            })}
           </p>
         </Card>
       </div>
 
-      <LeaderboardTable rows={rows} />
+      <LeaderboardTable rows={rows} locale={locale} />
     </AppShell>
   );
 }

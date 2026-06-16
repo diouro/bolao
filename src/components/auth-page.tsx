@@ -1,32 +1,28 @@
-import Link from "next/link";
-import { Trophy } from "lucide-react";
 import { Button } from "@/components/button";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { PendingForm } from "@/components/pending-form";
 import { Card, Input, Label } from "@/components/ui";
+import { t, type Locale } from "@/lib/i18n";
 
 export function AuthPage({
   eyebrow,
   title,
   description,
+  locale,
   children,
 }: {
   eyebrow: string;
   title: string;
   description: string;
+  locale: Locale;
   children: React.ReactNode;
 }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-zinc-100 px-4 py-10">
       <div className="w-full max-w-5xl">
-        <Link
-          href="/"
-          className="mb-6 inline-flex items-center gap-3 text-sm font-semibold text-zinc-700"
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600 text-white">
-            <Trophy className="h-5 w-5" />
-          </span>
-          Back to Bolão
-        </Link>
+        <div className="mb-6 flex justify-end">
+          <LanguageSwitcher locale={locale} compact />
+        </div>
         <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <Card className="flex flex-col justify-between bg-zinc-950 text-white">
             <div>
@@ -39,7 +35,7 @@ export function AuthPage({
               <p className="mt-4 leading-7 text-zinc-300">{description}</p>
             </div>
             <div className="mt-10 rounded-2xl bg-white/10 p-4 text-sm text-zinc-200">
-              Predictions lock before kickoff. Only final scores count.
+              {t(locale, "auth.lockHint")}
             </div>
           </Card>
 
@@ -58,6 +54,7 @@ export function EmailAuthForm({
   submitLabel,
   pendingLabel,
   footer,
+  locale,
 }: {
   title: string;
   action: (formData: FormData) => void | Promise<void>;
@@ -66,6 +63,7 @@ export function EmailAuthForm({
   submitLabel: string;
   pendingLabel: string;
   footer: React.ReactNode;
+  locale: Locale;
 }) {
   return (
     <Card>
@@ -74,7 +72,9 @@ export function EmailAuthForm({
         <input type="hidden" name="next" value={next} />
         {includeName && (
           <div>
-            <Label htmlFor={`${title}-name`}>Display name</Label>
+            <Label htmlFor={`${title}-name`}>
+              {t(locale, "auth.displayName")}
+            </Label>
             <Input
               id={`${title}-name`}
               name="displayName"
@@ -84,7 +84,7 @@ export function EmailAuthForm({
           </div>
         )}
         <div>
-          <Label htmlFor={`${title}-email`}>Email</Label>
+          <Label htmlFor={`${title}-email`}>{t(locale, "auth.email")}</Label>
           <Input
             id={`${title}-email`}
             name="email"
@@ -95,7 +95,9 @@ export function EmailAuthForm({
           />
         </div>
         <div>
-          <Label htmlFor={`${title}-password`}>Password</Label>
+          <Label htmlFor={`${title}-password`}>
+            {t(locale, "auth.password")}
+          </Label>
           <Input
             id={`${title}-password`}
             name="password"

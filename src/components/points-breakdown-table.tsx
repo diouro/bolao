@@ -1,19 +1,24 @@
 import { Check } from "lucide-react";
 import { Card } from "@/components/ui";
+import { t, type Locale } from "@/lib/i18n";
 import type { PointsBreakdown } from "@/lib/points-breakdown";
 import { resolveMatchSide } from "@/lib/tournament/resolve-slots";
 
 export function PointsBreakdownTable({
   breakdown,
+  locale,
 }: {
   breakdown: PointsBreakdown;
+  locale: Locale;
 }) {
   if (breakdown.matches.length === 0) {
     return (
       <Card>
-        <p className="font-semibold text-zinc-950">No finished matches yet.</p>
+        <p className="font-semibold text-zinc-950">
+          {t(locale, "breakdown.empty.title")}
+        </p>
         <p className="mt-2 text-sm text-zinc-600">
-          The breakdown appears once results are synced or entered.
+          {t(locale, "breakdown.empty.body")}
         </p>
       </Card>
     );
@@ -25,9 +30,11 @@ export function PointsBreakdownTable({
         <table className="min-w-max border-separate border-spacing-0 text-sm">
           <thead>
             <tr>
-              <StickyHeader className="left-0 z-30 min-w-56">Player</StickyHeader>
+              <StickyHeader className="left-0 z-30 min-w-56">
+                {t(locale, "breakdown.player")}
+              </StickyHeader>
               <StickyHeader className="left-56 z-30 min-w-24 text-right">
-                Total
+                {t(locale, "breakdown.total")}
               </StickyHeader>
               {breakdown.matches.map((match) => (
                 <th
@@ -58,8 +65,8 @@ export function PointsBreakdownTable({
                     {user.profile.has_paid && (
                       <span
                         className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white"
-                        title="Paid"
-                        aria-label="Paid"
+                        title={t(locale, "common.paid")}
+                        aria-label={t(locale, "common.paid")}
                       >
                         <Check className="h-3 w-3" />
                       </span>
@@ -83,12 +90,12 @@ export function PointsBreakdownTable({
                         </div>
                         <div className="text-xs font-semibold text-zinc-400">
                           {cell.score.exact
-                            ? "Exact"
+                            ? t(locale, "breakdown.exact")
                             : cell.score.result
-                              ? "Outcome"
+                              ? t(locale, "breakdown.outcome")
                               : cell.prediction
-                                ? "Wrong"
-                                : "No pick"}
+                                ? t(locale, "breakdown.wrong")
+                                : t(locale, "breakdown.noPick")}
                         </div>
                       </div>
                       <div className="rounded-full bg-zinc-950 px-2.5 py-1 text-xs font-black text-white">

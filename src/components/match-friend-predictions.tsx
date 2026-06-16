@@ -1,13 +1,17 @@
 import { Check, Users } from "lucide-react";
+import { t, type Locale } from "@/lib/i18n";
 import { MATCH_FRIEND_PREDICTIONS_LIMIT } from "@/lib/matches";
 import type { MatchFriendPrediction } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export function MatchFriendPredictions({
   predictions,
   currentUserId,
+  locale,
 }: {
   predictions: MatchFriendPrediction[];
   currentUserId: string;
+  locale: Locale;
 }) {
   const sortedPredictions = [...predictions].sort((a, b) => {
     if (a.user_id === currentUserId) return -1;
@@ -23,7 +27,7 @@ export function MatchFriendPredictions({
       <div className="mb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm font-bold text-zinc-800">
           <Users className="h-4 w-4 text-emerald-600" />
-          Friends predictions
+          {t(locale, "friends.predictions")}
         </div>
         <div className="text-xs font-semibold text-zinc-400">
           {predictions.length}/{MATCH_FRIEND_PREDICTIONS_LIMIT}
@@ -39,20 +43,25 @@ export function MatchFriendPredictions({
               return (
                 <div
                   key={`${prediction.user_id}-${prediction.match_id}`}
-                  className="flex items-center justify-between gap-3 rounded-xl bg-zinc-50 px-3 py-2"
+                  className={cn(
+                    "flex items-center justify-between gap-3 rounded-xl border px-3 py-2",
+                    isCurrentUser
+                      ? "border-emerald-200 bg-emerald-50"
+                      : "border-transparent bg-zinc-50",
+                  )}
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <div className="truncate text-sm font-bold text-zinc-950">
-                        {isCurrentUser
-                          ? "You"
-                          : prediction.display_name ?? prediction.email ?? "Friend"}
+                        {prediction.display_name ??
+                          prediction.email ??
+                          t(locale, "common.friend")}
                       </div>
                       {prediction.has_paid && (
                         <span
                           className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white"
-                          title="Paid"
-                          aria-label="Paid"
+                          title={t(locale, "common.paid")}
+                          aria-label={t(locale, "common.paid")}
                         >
                           <Check className="h-2.5 w-2.5" />
                         </span>
@@ -73,7 +82,7 @@ export function MatchFriendPredictions({
           </div>
         ) : (
           <div className="rounded-xl bg-zinc-50 p-4 text-sm text-zinc-500">
-            No predictions saved for this match yet.
+            {t(locale, "friends.noPredictions")}
           </div>
         )}
       </div>

@@ -12,20 +12,23 @@ import {
 } from "lucide-react";
 import { logout } from "@/app/actions";
 import { Button } from "@/components/button";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { MentionNavBadge } from "@/components/mention-nav-badge";
+import { t, type TranslationKey } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 import { getMentionLogs } from "@/lib/mentions";
 import { getMentionHandle } from "@/lib/profiles";
 import { cn } from "@/lib/utils";
 import type { Profile } from "@/lib/types";
 
 const navItems = [
-  { key: "dashboard", label: "Dashboard", href: "/dashboard", icon: ListChecks },
-  { key: "predictions", label: "Predictions", href: "/predictions", icon: Trophy },
-  { key: "leaderboard", label: "Leaderboard", href: "/leaderboard", icon: BarChart3 },
-  { key: "breakdown", label: "Breakdown", href: "/breakdown", icon: ListChecks },
-  { key: "chat", label: "Chat", href: "/chat", icon: MessageCircle },
-  { key: "mentions", label: "Mentions", href: "/mentions", icon: Bell },
-  { key: "stats", label: "Stats", href: "/stats", icon: BarChart3 },
+  { key: "dashboard", labelKey: "app.dashboard", href: "/dashboard", icon: ListChecks },
+  { key: "predictions", labelKey: "app.predictions", href: "/predictions", icon: Trophy },
+  { key: "leaderboard", labelKey: "app.leaderboard", href: "/leaderboard", icon: BarChart3 },
+  { key: "breakdown", labelKey: "app.breakdown", href: "/breakdown", icon: ListChecks },
+  { key: "chat", labelKey: "app.chat", href: "/chat", icon: MessageCircle },
+  { key: "mentions", labelKey: "app.mentions", href: "/mentions", icon: Bell },
+  { key: "stats", labelKey: "app.stats", href: "/stats", icon: BarChart3 },
 ];
 
 const mobileNavItems = navItems.filter((item) => item.key !== "mentions");
@@ -47,6 +50,7 @@ export async function AppShell({
     | "admin";
   children: ReactNode;
 }) {
+  const locale = await getLocale();
   const mentionCount = (await getMentionLogs(profile)).length;
   const mentionHandle = getMentionHandle(profile);
 
@@ -83,7 +87,7 @@ export async function AppShell({
                 ) : null
               }
             >
-              {item.label}
+              {t(locale, item.labelKey as TranslationKey)}
             </NavItem>
           ))}
           {profile.role === "admin" && (
@@ -92,11 +96,14 @@ export async function AppShell({
               active={active === "admin"}
               icon={<Shield className="h-4 w-4" />}
             >
-              Results admin
+              {t(locale, "app.resultsAdmin")}
             </NavItem>
           )}
         </nav>
         <div className="border-t border-zinc-200 p-4">
+          <div className="mb-4">
+            <LanguageSwitcher locale={locale} />
+          </div>
           <div className="flex items-center gap-2">
             <p className="min-w-0 truncate text-sm font-semibold text-zinc-950">
               {profile.display_name ?? profile.email}
@@ -108,10 +115,10 @@ export async function AppShell({
             <input type="hidden" name="redirectTo" value="/signin" />
             <Button
               className="h-10 w-full border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
-              pendingChildren="Logging out"
+              pendingChildren={t(locale, "app.loggingOut")}
             >
               <LogOut className="mr-2 h-4 w-4" />
-              Log out
+              {t(locale, "app.logout")}
             </Button>
           </form>
         </div>
@@ -136,8 +143,8 @@ export async function AppShell({
               <input type="hidden" name="redirectTo" value="/signin" />
               <Button
                 className="h-10 w-10 border border-zinc-200 bg-white p-0 text-zinc-700 hover:bg-zinc-50"
-                pendingChildren={<span className="sr-only">Logging out</span>}
-                aria-label="Log out"
+                pendingChildren={<span className="sr-only">{t(locale, "app.loggingOut")}</span>}
+                aria-label={t(locale, "app.logout")}
               >
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -160,7 +167,7 @@ export async function AppShell({
             )}
           >
             <item.icon className="h-4 w-4" />
-            {item.label}
+            {t(locale, item.labelKey as TranslationKey)}
           </Link>
         ))}
       </nav>

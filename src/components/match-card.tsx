@@ -6,6 +6,7 @@ import { MatchFriendPredictions } from "@/components/match-friend-predictions";
 import { PendingForm } from "@/components/pending-form";
 import { Badge, Card, Input } from "@/components/ui";
 import { formatAppDateTime } from "@/lib/dates";
+import { t, type Locale, type TranslationKey } from "@/lib/i18n";
 import { isPredictionLocked } from "@/lib/predictions/lock";
 import { calculatePoints } from "@/lib/scoring/calculate-points";
 import { resolveMatchSide } from "@/lib/tournament/resolve-slots";
@@ -16,14 +17,14 @@ import type {
   MentionableUser,
 } from "@/lib/types";
 
-const roundLabels: Record<string, string> = {
-  group: "Group",
-  round_of_32: "Round of 32",
-  round_of_16: "Round of 16",
-  quarter_final: "Quarter-final",
-  semi_final: "Semi-final",
-  third_place: "Third place",
-  final: "Final",
+const roundLabelKeys: Record<string, TranslationKey> = {
+  group: "common.group",
+  round_of_32: "round.round_of_32",
+  round_of_16: "round.round_of_16",
+  quarter_final: "round.quarter_final",
+  semi_final: "round.semi_final",
+  third_place: "round.third_place",
+  final: "round.final",
 };
 
 export function MatchCard({
@@ -33,6 +34,7 @@ export function MatchCard({
   friendPredictions = [],
   mentionableUsers = [],
   currentUserId,
+  locale,
 }: {
   match: MatchWithPrediction;
   lockMinutes: number;
@@ -40,6 +42,7 @@ export function MatchCard({
   friendPredictions?: MatchFriendPrediction[];
   mentionableUsers?: MentionableUser[];
   currentUserId: string;
+  locale: Locale;
 }) {
   const home = resolveMatchSide(match, "home");
   const away = resolveMatchSide(match, "away");
@@ -66,11 +69,11 @@ export function MatchCard({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex gap-2">
             <Badge className="bg-white shadow-sm">
-              {roundLabels[match.round] ?? match.round}
+              {t(locale, roundLabelKeys[match.round] ?? "common.match")}
             </Badge>
             {match.group_code && (
               <Badge className="bg-emerald-50 text-emerald-700">
-                Group {match.group_code}
+                {t(locale, "common.group")} {match.group_code}
               </Badge>
             )}
           </div>
@@ -91,12 +94,14 @@ export function MatchCard({
             awayScore={match.away_score}
             homePrediction={match.prediction?.home_score ?? null}
             awayPrediction={match.prediction?.away_score ?? null}
+            locale={locale}
           />
           <MatchFooter
             points={points}
             status={match.status}
             hasSavedPrediction={hasSavedPrediction}
             locked
+            locale={locale}
           />
         </>
       ) : (
@@ -113,23 +118,27 @@ export function MatchCard({
             homePrediction={match.prediction?.home_score ?? null}
             awayPrediction={match.prediction?.away_score ?? null}
             matchId={match.id}
+            locale={locale}
           />
           <MatchFooter
             points={points}
             status={match.status}
             hasSavedPrediction={hasSavedPrediction}
+            locale={locale}
           />
         </PendingForm>
       )}
       <MatchFriendPredictions
         predictions={friendPredictions}
         currentUserId={currentUserId}
+        locale={locale}
       />
       <MatchComments
         matchId={match.id}
         comments={comments}
         mentionableUsers={mentionableUsers}
         currentUserId={currentUserId}
+        locale={locale}
       />
       </Card>
     </div>
@@ -147,6 +156,7 @@ function MatchBody({
   homePrediction,
   awayPrediction,
   matchId,
+  locale,
 }: {
   home: ReturnType<typeof resolveMatchSide>;
   away: ReturnType<typeof resolveMatchSide>;
@@ -158,6 +168,7 @@ function MatchBody({
   homePrediction: number | null;
   awayPrediction: number | null;
   matchId?: string;
+  locale: Locale;
 }) {
   return (
     <div className="grid grid-cols-[minmax(0,1fr)_3.75rem_auto_3.75rem_minmax(0,1fr)] items-center gap-2 px-5 py-6 sm:grid-cols-[minmax(0,1fr)_5rem_auto_5rem_minmax(0,1fr)] sm:gap-4 sm:px-6">
@@ -173,6 +184,7 @@ function MatchBody({
         hasScore={hasScore}
         homeScore={homeScore}
         awayScore={awayScore}
+        locale={locale}
       />
       <PredictionScoreBox
         side="away"
@@ -190,25 +202,27 @@ function MatchStatus({
   hasScore,
   homeScore,
   awayScore,
+  locale,
 }: {
   hasStarted: boolean;
   hasScore: boolean;
   homeScore: number | null;
   awayScore: number | null;
+  locale: Locale;
 }) {
   return (
     <div className="flex flex-col items-center">
       <div className="rounded-3xl border border-zinc-200 bg-zinc-950 px-4 py-3 text-center text-white shadow-sm sm:min-w-28">
         <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
-          {hasScore ? "Final" : hasStarted ? "Status" : "Match"}
+          {hasScore ? t(locale, "round.final") : hasStarted ? t(locale, "match.status") : t(locale, "common.match")}
         </div>
         <div className="mt-1 text-lg font-black sm:text-2xl">
-          {hasScore ? `${homeScore}-${awayScore}` : hasStarted ? "TBD" : "vs"}
+          {hasScore ? `${homeScore}-${awayScore}` : hasStarted ? t(locale, "common.tbd") : "vs"}
         </div>
       </div>
       {hasStarted && !hasScore && (
         <div className="mt-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
-          Awaiting score
+          {t(locale, "match.awaitingScore")}
         </div>
       )}
     </div>
@@ -262,26 +276,28 @@ function MatchFooter({
   status,
   hasSavedPrediction,
   locked = false,
+  locale,
 }: {
   points: ReturnType<typeof calculatePoints> | null;
   status: string;
   hasSavedPrediction: boolean;
   locked?: boolean;
+  locale: Locale;
 }) {
   return (
     <div className="flex flex-col gap-4 border-t border-zinc-100 bg-zinc-50/70 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
       <div>
         <div className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
-          Your prediction
+          {t(locale, "match.yourPrediction")}
         </div>
         <div className="mt-1 text-sm font-semibold text-zinc-600">
           {locked
             ? hasSavedPrediction
-              ? "Locked in"
-              : "No prediction saved"
+              ? t(locale, "match.lockedIn")
+              : t(locale, "match.noPrediction")
             : hasSavedPrediction
-              ? "You can still update this pick"
-              : "Enter the exact score above"}
+              ? t(locale, "match.youCanUpdate")
+              : t(locale, "match.inputHint")}
         </div>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -289,7 +305,11 @@ function MatchFooter({
           <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
             <span className="text-lg font-black">{points.points}</span> pts
             <span className="ml-1">
-              {points.exact ? "exact score" : points.result ? "result hit" : ""}
+              {points.exact
+                ? t(locale, "match.exactScore")
+                : points.result
+                  ? t(locale, "match.resultHit")
+                  : ""}
             </span>
           </div>
         )}
@@ -300,9 +320,11 @@ function MatchFooter({
                 ? "h-12 bg-amber-500 px-6 text-zinc-950 hover:bg-amber-400"
                 : "h-12 bg-emerald-600 px-6 hover:bg-emerald-700"
             }
-            pendingChildren={hasSavedPrediction ? "Updating" : "Saving"}
+            pendingChildren={
+              hasSavedPrediction ? t(locale, "match.updating") : t(locale, "common.saving")
+            }
           >
-            {hasSavedPrediction ? "Update" : "Save"}
+            {hasSavedPrediction ? t(locale, "match.update") : t(locale, "common.save")}
           </Button>
         )}
       </div>

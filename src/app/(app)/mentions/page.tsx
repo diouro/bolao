@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Bell, MessageCircle } from "lucide-react";
+import { Bell } from "lucide-react";
 import { clearAllMentions } from "@/app/(app)/mentions/actions";
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/button";
@@ -7,6 +6,8 @@ import { MentionLink } from "@/components/mention-link";
 import { Badge, Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
 import { formatAppDateTime } from "@/lib/dates";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 import { getMentionLogs } from "@/lib/mentions";
 import { getMentionHandle } from "@/lib/profiles";
 
@@ -14,6 +15,7 @@ export const dynamic = "force-dynamic";
 
 export default async function MentionsPage() {
   const profile = await requireProfile();
+  const locale = await getLocale();
   const mentions = await getMentionLogs(profile);
   const handle = getMentionHandle(profile);
 
@@ -22,19 +24,19 @@ export default async function MentionsPage() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
-            Mentions
+            {t(locale, "app.mentions")}
           </p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
-            Unread mentions
+            {t(locale, "mentions.title")}
           </h1>
         </div>
         {mentions.length > 0 && (
           <form action={clearAllMentions}>
             <Button
               className="h-10 border border-zinc-200 bg-white px-4 text-zinc-700 hover:bg-zinc-50"
-              pendingChildren="Clearing"
+              pendingChildren={t(locale, "mentions.clearing")}
             >
-              Clear all
+              {t(locale, "mentions.clearAll")}
             </Button>
           </form>
         )}
@@ -60,14 +62,18 @@ export default async function MentionsPage() {
                             : "bg-zinc-100 text-zinc-700"
                         }
                       >
-                        {mention.source === "chat" ? "Chat" : "Match comment"}
+                        {mention.source === "chat"
+                          ? t(locale, "app.chat")
+                          : t(locale, "mentions.matchComment")}
                       </Badge>
                       <span className="text-sm font-bold text-zinc-950">
                         {mention.sourceLabel}
                       </span>
                     </div>
                     <p className="text-sm font-semibold text-zinc-500">
-                      {mention.author_name ?? mention.author_email ?? "Friend"}
+                      {mention.author_name ??
+                        mention.author_email ??
+                        t(locale, "common.friend")}
                     </p>
                     <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-zinc-700">
                       {mention.body}
@@ -86,19 +92,11 @@ export default async function MentionsPage() {
               <Bell className="h-5 w-5" />
             </div>
             <p className="mt-4 font-semibold text-zinc-950">
-              No unread mentions.
+              {t(locale, "mentions.empty.title")}
             </p>
             <p className="mt-2 text-sm text-zinc-600">
-              When someone tags @{handle} in chat or match comments, it will show
-              here until you open or clear it.
+              {t(locale, "mentions.empty.body", { handle })}
             </p>
-            <Link
-              href="/chat"
-              className="mt-4 inline-flex items-center justify-center rounded-full bg-emerald-600 px-5 py-2 text-sm font-bold text-white transition hover:bg-emerald-700"
-            >
-              <MessageCircle className="mr-2 h-4 w-4" />
-              Open chat
-            </Link>
           </Card>
         )}
       </div>

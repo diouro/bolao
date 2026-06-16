@@ -16,6 +16,7 @@ import {
   CHAT_MESSAGES_PAGE_SIZE,
   type ChatMessageWithAuthor,
 } from "@/lib/chat-types";
+import { getIntlLocale, t, type Locale } from "@/lib/i18n";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { ChatMessage, MentionableUser, Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -31,11 +32,13 @@ export function ChatRoom({
   currentUserId,
   mentionableUsers,
   appTimeZone,
+  locale,
 }: {
   initialMessages: ChatMessageWithAuthor[];
   currentUserId: string;
   mentionableUsers: MentionableUser[];
   appTimeZone: string;
+  locale: Locale;
 }) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [messages, setMessages] = useState(initialMessages);
@@ -60,14 +63,14 @@ export function ChatRoom({
 
   const timeFormatter = useMemo(
     () =>
-      new Intl.DateTimeFormat("en", {
+      new Intl.DateTimeFormat(getIntlLocale(locale), {
         timeZone: appTimeZone,
         month: "short",
         day: "numeric",
         hour: "numeric",
         minute: "2-digit",
       }),
-    [appTimeZone],
+    [appTimeZone, locale],
   );
   const mentionSuggestions = useMemo(() => {
     if (!activeMention) {
@@ -367,16 +370,18 @@ export function ChatRoom({
     <Card className="overflow-hidden p-0">
       <div className="flex items-center justify-between gap-3 border-b border-zinc-100 px-5 py-4 sm:px-6">
         <div>
-          <h2 className="text-lg font-black text-zinc-950">Pool chat</h2>
+          <h2 className="text-lg font-black text-zinc-950">
+            {t(locale, "chat.pool")}
+          </h2>
           <p className="text-sm text-zinc-500">
             {realtimeStatus === "live"
-              ? "Live with Supabase Realtime"
-              : "Reconnecting, checking every 10 seconds"}
+              ? t(locale, "chat.liveStatus")
+              : t(locale, "chat.pollingStatus")}
           </p>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
           <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-            {onlineCount} online
+            {t(locale, "chat.online", { count: onlineCount })}
           </span>
           <span
             className={cn(
@@ -386,7 +391,9 @@ export function ChatRoom({
                 : "bg-amber-50 text-amber-700",
             )}
           >
-            {realtimeStatus === "live" ? "Live" : "Polling"}
+            {realtimeStatus === "live"
+              ? t(locale, "chat.live")
+              : t(locale, "chat.polling")}
           </span>
         </div>
       </div>
@@ -399,12 +406,12 @@ export function ChatRoom({
         {isLoadingOlder && (
           <div className="flex justify-center py-2 text-sm font-semibold text-zinc-500">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Loading earlier messages
+            {t(locale, "chat.loadingEarlier")}
           </div>
         )}
         {!hasMore && messages.length > 0 && (
           <div className="py-2 text-center text-xs font-semibold uppercase tracking-wide text-zinc-400">
-            Start of chat
+            {t(locale, "chat.start")}
           </div>
         )}
         {messages.length > 0 ? (
@@ -414,11 +421,12 @@ export function ChatRoom({
               message={message}
               isOwn={message.user_id === currentUserId}
               time={timeFormatter.format(new Date(message.created_at))}
+              locale={locale}
             />
           ))
         ) : (
           <div className="rounded-3xl bg-white p-6 text-center text-sm text-zinc-500 shadow-sm">
-            No messages yet. Start the pool chat.
+            {t(locale, "chat.empty")}
           </div>
         )}
         <div ref={bottomSentinelRef} />
@@ -435,7 +443,7 @@ export function ChatRoom({
         className="flex flex-col gap-3 border-t border-zinc-100 bg-white px-5 py-4 sm:flex-row sm:px-6"
       >
         <label className="sr-only" htmlFor="chat-message">
-          Chat message
+          {t(locale, "chat.label")}
         </label>
         <div className="relative flex-1">
           <textarea
@@ -450,7 +458,7 @@ export function ChatRoom({
             onKeyUp={updateCaret}
             maxLength={1000}
             required
-            placeholder="Write a message... type @ to mention a friend"
+            placeholder={t(locale, "chat.input")}
             className="min-h-12 w-full resize-y rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-950 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-100"
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey) {
@@ -492,10 +500,10 @@ export function ChatRoom({
         <Button
           disabled={isSending}
           className="h-12 bg-emerald-600 px-5 hover:bg-emerald-700"
-          pendingChildren="Sending"
+          pendingChildren={t(locale, "chat.sending")}
         >
           <Send className="mr-2 h-4 w-4" />
-          Send
+          {t(locale, "chat.send")}
         </Button>
       </form>
     </Card>
@@ -506,10 +514,12 @@ function ChatBubble({
   message,
   isOwn,
   time,
+  locale,
 }: {
   message: ChatMessageWithAuthor;
   isOwn: boolean;
   time: string;
+  locale: Locale;
 }) {
   return (
     <div
@@ -524,9 +534,7 @@ function ChatBubble({
       >
         <div className="mb-1 flex flex-wrap items-center gap-2">
           <span className="text-sm font-black">
-            {isOwn
-              ? "You"
-              : message.author_name ?? message.author_email ?? "Friend"}
+            {message.author_name ?? message.author_email ?? t(locale, "common.friend")}
           </span>
           {message.author_has_paid && (
             <span
@@ -534,8 +542,8 @@ function ChatBubble({
                 "inline-flex h-5 w-5 items-center justify-center rounded-full",
                 isOwn ? "bg-white text-emerald-700" : "bg-emerald-600 text-white",
               )}
-              title="Paid"
-              aria-label="Paid"
+              title={t(locale, "common.paid")}
+              aria-label={t(locale, "common.paid")}
             >
               <Check className="h-3 w-3" />
             </span>

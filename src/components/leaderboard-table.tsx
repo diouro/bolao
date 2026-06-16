@@ -1,19 +1,28 @@
 import { Check } from "lucide-react";
+import { t, type Locale } from "@/lib/i18n";
 import type { LeaderboardRow } from "@/lib/leaderboard";
 
-export function LeaderboardTable({ rows }: { rows: LeaderboardRow[] }) {
+export function LeaderboardTable({
+  rows,
+  locale,
+}: {
+  rows: LeaderboardRow[];
+  locale: Locale;
+}) {
   return (
     <div className="overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm">
       <div className="grid grid-cols-[64px_1fr_90px_90px] border-b border-zinc-200 bg-zinc-50 px-4 py-3 text-xs font-bold uppercase tracking-wide text-zinc-500 sm:grid-cols-[80px_1fr_120px_120px_120px]">
-        <div>Rank</div>
-        <div>Player</div>
-        <div className="text-right">Points</div>
-        <div className="text-right">Exact</div>
-        <div className="hidden text-right sm:block">Result hits</div>
+        <div>{t(locale, "leaderboard.rank")}</div>
+        <div>{t(locale, "leaderboard.player")}</div>
+        <div className="text-right">{t(locale, "leaderboard.points")}</div>
+        <div className="text-right">{t(locale, "leaderboard.exact")}</div>
+        <div className="hidden text-right sm:block">
+          {t(locale, "leaderboard.resultHits")}
+        </div>
       </div>
       {rows.length === 0 ? (
         <div className="p-6 text-sm text-zinc-600">
-          No players yet. The table fills as friends sign up.
+          {t(locale, "leaderboard.empty")}
         </div>
       ) : (
         rows.map((row) => (
@@ -30,8 +39,8 @@ export function LeaderboardTable({ rows }: { rows: LeaderboardRow[] }) {
                 {row.profile.has_paid && (
                   <span
                     className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white"
-                    title="Paid"
-                    aria-label="Paid"
+                    title={t(locale, "common.paid")}
+                    aria-label={t(locale, "common.paid")}
                   >
                     <Check className="h-3 w-3" />
                   </span>

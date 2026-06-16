@@ -6,6 +6,8 @@ import { Badge, Card } from "@/components/ui";
 import { syncFinishedResults } from "@/app/(app)/admin/results/actions";
 import { requireAdmin } from "@/lib/auth";
 import { formatAppDateTime } from "@/lib/dates";
+import { t, type Locale } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 import { getAllMatches } from "@/lib/matches";
 import { resolveMatchSide } from "@/lib/tournament/resolve-slots";
 import type { Match } from "@/lib/types";
@@ -14,6 +16,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminResultsPage() {
   const profile = await requireAdmin();
+  const locale = await getLocale();
   const matches = await getAllMatches();
   const nowMs = new Date().getTime();
   const matchesToShow = matches.filter((match) => {
@@ -26,18 +29,18 @@ export default async function AdminResultsPage() {
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
-            Admin
+            {t(locale, "admin.eyebrow")}
           </p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
-            Enter final scores
+            {t(locale, "admin.title")}
           </h1>
         </div>
         <form action={syncFinishedResults}>
           <Button
             className="bg-emerald-600 hover:bg-emerald-700"
-            pendingChildren="Syncing scores"
+            pendingChildren={t(locale, "admin.syncing")}
           >
-            Sync finished scores
+            {t(locale, "admin.sync")}
           </Button>
         </form>
       </div>
@@ -45,15 +48,13 @@ export default async function AdminResultsPage() {
       <div className="grid gap-4">
         {matchesToShow.length > 0 ? (
           matchesToShow.map((match) => (
-            <ResultRow key={match.id} match={match} />
+            <ResultRow key={match.id} match={match} locale={locale} />
           ))
         ) : (
           <Card>
-            <p className="font-semibold text-zinc-950">
-              No matches are ready yet.
-            </p>
+            <p className="font-semibold text-zinc-950">{t(locale, "admin.empty.title")}</p>
             <p className="mt-2 text-sm text-zinc-600">
-              Matches appear here after kickoff.
+              {t(locale, "admin.empty.body")}
             </p>
           </Card>
         )}
@@ -62,7 +63,7 @@ export default async function AdminResultsPage() {
   );
 }
 
-function ResultRow({ match }: { match: Match }) {
+function ResultRow({ match, locale }: { match: Match; locale: Locale }) {
   const home = resolveMatchSide(match, "home");
   const away = resolveMatchSide(match, "away");
 
@@ -89,7 +90,7 @@ function ResultRow({ match }: { match: Match }) {
           {formatAppDateTime(match.kickoff_at)}
         </time>
       </div>
-      <ResultForm match={match} />
+      <ResultForm match={match} locale={locale} />
     </Card>
   );
 }

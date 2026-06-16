@@ -4,6 +4,8 @@ import { Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
 import { getMatchCommentsForMatches } from "@/lib/comments";
 import { getAppDateKey } from "@/lib/dates";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 import {
   getFriendPredictionsForMatches,
   getMatchesWithUserPredictions,
@@ -16,6 +18,7 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const profile = await requireProfile();
+  const locale = await getLocale();
   const matches = await getMatchesWithUserPredictions(profile.id);
   const lockMinutes = await getPredictionLockMinutes();
   const now = new Date();
@@ -46,14 +49,14 @@ export default async function DashboardPage() {
           Dashboard
         </p>
         <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
-          Your next predictions
+          {t(locale, "dashboard.title")}
         </h1>
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Metric label="Upcoming matches" value={upcoming.length} />
-        <Metric label="Missing picks" value={missingPicks} />
-        <Metric label="Picks made" value={picksMade} />
+        <Metric label={t(locale, "dashboard.upcoming")} value={upcoming.length} />
+        <Metric label={t(locale, "dashboard.missing")} value={missingPicks} />
+        <Metric label={t(locale, "dashboard.picksMade")} value={picksMade} />
       </div>
 
       <div className="grid gap-4">
@@ -67,13 +70,16 @@ export default async function DashboardPage() {
               friendPredictions={friendPredictionsByMatch.get(match.id) ?? []}
               mentionableUsers={mentionableUsers}
               currentUserId={profile.id}
+              locale={locale}
             />
           ))
         ) : (
           <Card>
-            <p className="font-semibold text-zinc-950">No upcoming matches.</p>
+            <p className="font-semibold text-zinc-950">
+              {t(locale, "dashboard.empty.title")}
+            </p>
             <p className="mt-2 text-sm text-zinc-600">
-              Once fixtures are seeded, upcoming matches will appear here.
+              {t(locale, "dashboard.empty.body")}
             </p>
           </Card>
         )}

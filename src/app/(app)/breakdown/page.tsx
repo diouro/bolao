@@ -2,12 +2,15 @@ import { AppShell } from "@/components/app-shell";
 import { PointsBreakdownTable } from "@/components/points-breakdown-table";
 import { Card } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
+import { t } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 import { getPointsBreakdown } from "@/lib/points-breakdown";
 
 export const dynamic = "force-dynamic";
 
 export default async function BreakdownPage() {
   const profile = await requireProfile();
+  const locale = await getLocale();
   const breakdown = await getPointsBreakdown();
   const finishedMatches = breakdown.matches.length;
 
@@ -15,18 +18,18 @@ export default async function BreakdownPage() {
     <AppShell profile={profile} active="breakdown">
       <div className="mb-6">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
-          Points breakdown
+          {t(locale, "app.breakdown")}
         </p>
         <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
-          Points per user, per match
+          {t(locale, "breakdown.title")}
         </h1>
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Metric label="Finished matches" value={finishedMatches} />
-        <Metric label="Players" value={breakdown.users.length} />
+        <Metric label={t(locale, "breakdown.finishedMatches")} value={finishedMatches} />
+        <Metric label={t(locale, "breakdown.players")} value={breakdown.users.length} />
         <Metric
-          label="Total points awarded"
+          label={t(locale, "breakdown.pointsAwarded")}
           value={breakdown.users.reduce(
             (sum, user) => sum + user.totalPoints,
             0
@@ -34,7 +37,7 @@ export default async function BreakdownPage() {
         />
       </div>
 
-      <PointsBreakdownTable breakdown={breakdown} />
+      <PointsBreakdownTable breakdown={breakdown} locale={locale} />
     </AppShell>
   );
 }

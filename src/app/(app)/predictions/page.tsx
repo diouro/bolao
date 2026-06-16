@@ -10,6 +10,8 @@ import {
 } from "@/lib/matches";
 import { getPredictionLockMinutes } from "@/lib/predictions/settings";
 import { getMentionableUsers } from "@/lib/profiles";
+import { t, type Locale, type TranslationKey } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
 import type {
   MatchComment,
   MatchFriendPrediction,
@@ -30,14 +32,14 @@ const knockoutRoundOrder = [
   "final",
 ] as const satisfies readonly TournamentRound[];
 
-const roundLabels: Record<TournamentRound, string> = {
-  group: "Group stage",
-  round_of_32: "Round of 32",
-  round_of_16: "Round of 16",
-  quarter_final: "Quarter-finals",
-  semi_final: "Semi-finals",
-  third_place: "Third place",
-  final: "Final",
+const roundLabelKeys: Record<TournamentRound, TranslationKey> = {
+  group: "round.group",
+  round_of_32: "round.round_of_32",
+  round_of_16: "round.round_of_16",
+  quarter_final: "round.quarter_final",
+  semi_final: "round.semi_final",
+  third_place: "round.third_place",
+  final: "round.final",
 };
 
 const groupOrder = [
@@ -66,6 +68,7 @@ export default async function PredictionsPage({
 }) {
   const params = await searchParams;
   const profile = await requireProfile();
+  const locale = await getLocale();
   const matches = await getMatchesWithUserPredictions(profile.id);
   const lockMinutes = await getPredictionLockMinutes();
   const selectedCategory = normalizeCategory(params.group);
@@ -86,18 +89,19 @@ export default async function PredictionsPage({
     <AppShell profile={profile} active="predictions">
       <div className="mb-6">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
-          Predictions
+          {t(locale, "app.predictions")}
         </p>
         <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
-          Full fixture list
+          {t(locale, "predictions.fullList")}
         </h1>
       </div>
 
       <div className="space-y-6">
-        <FixtureNavigation selectedCategory={selectedCategory} />
+        <FixtureNavigation selectedCategory={selectedCategory} locale={locale} />
         {isKnockoutCategory(selectedCategory) ? (
           <RoundFixture
             round={selectedCategory}
+            locale={locale}
             matches={displayedMatches}
             lockMinutes={lockMinutes}
             commentsByMatch={commentsByMatch}
@@ -108,6 +112,7 @@ export default async function PredictionsPage({
         ) : (
           <GroupFixture
             group={selectedCategory}
+            locale={locale}
             matches={displayedMatches}
             lockMinutes={lockMinutes}
             commentsByMatch={commentsByMatch}
@@ -145,8 +150,10 @@ function isKnockoutCategory(category: FixtureCategory): category is KnockoutCate
 
 function FixtureNavigation({
   selectedCategory,
+  locale,
 }: {
   selectedCategory: FixtureCategory;
+  locale: Locale;
 }) {
   return (
     <Card className="sticky top-4 z-10 p-3">
@@ -161,7 +168,7 @@ function FixtureNavigation({
                 "bg-emerald-600 text-white hover:bg-emerald-600"
             )}
           >
-            Group {group}
+            {t(locale, "common.group")} {group}
           </Link>
         ))}
         <div className="mx-1 h-10 w-px shrink-0 bg-zinc-200" />
@@ -175,7 +182,7 @@ function FixtureNavigation({
                 "bg-zinc-950 text-white hover:bg-zinc-950"
             )}
           >
-            {roundLabels[round]}
+            {t(locale, roundLabelKeys[round])}
           </Link>
         ))}
       </div>
@@ -185,6 +192,7 @@ function FixtureNavigation({
 
 function GroupFixture({
   group,
+  locale,
   matches,
   lockMinutes,
   commentsByMatch,
@@ -193,6 +201,7 @@ function GroupFixture({
   currentUserId,
 }: {
   group: string;
+  locale: Locale;
   matches: MatchWithPrediction[];
   lockMinutes: number;
   commentsByMatch: Map<string, MatchComment[]>;
@@ -206,12 +215,14 @@ function GroupFixture({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
-              Group {group}
+              {t(locale, "common.group")} {group}
             </p>
-            <h2 className="mt-1 text-2xl font-black text-zinc-950">Fixture</h2>
+            <h2 className="mt-1 text-2xl font-black text-zinc-950">
+              {t(locale, "predictions.fixture")}
+            </h2>
           </div>
           <div className="text-sm font-semibold text-zinc-500">
-            {matches.length} matches
+            {t(locale, "predictions.matches", { count: matches.length })}
           </div>
         </div>
       </Card>
@@ -225,6 +236,7 @@ function GroupFixture({
             friendPredictions={friendPredictionsByMatch.get(match.id) ?? []}
             mentionableUsers={mentionableUsers}
             currentUserId={currentUserId}
+            locale={locale}
           />
         ))}
       </div>
@@ -234,6 +246,7 @@ function GroupFixture({
 
 function RoundFixture({
   round,
+  locale,
   matches,
   lockMinutes,
   commentsByMatch,
@@ -242,6 +255,7 @@ function RoundFixture({
   currentUserId,
 }: {
   round: KnockoutCategory;
+  locale: Locale;
   matches: MatchWithPrediction[];
   lockMinutes: number;
   commentsByMatch: Map<string, MatchComment[]>;
@@ -255,18 +269,18 @@ function RoundFixture({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
-              Knockout
+              {t(locale, "predictions.knockout")}
             </p>
             <h2 className="mt-1 text-2xl font-black text-zinc-950">
-              {roundLabels[round]}
+              {t(locale, roundLabelKeys[round])}
             </h2>
           </div>
           <div className="text-sm font-semibold text-zinc-500">
-            {matches.length} matches
+            {t(locale, "predictions.matches", { count: matches.length })}
           </div>
         </div>
         <p className="mt-3 text-sm text-zinc-600">
-          Slots such as 1A or W R32-1 will show here until the teams are known.
+          {t(locale, "predictions.slots")}
         </p>
       </Card>
       <div className="grid gap-4">
@@ -279,6 +293,7 @@ function RoundFixture({
             friendPredictions={friendPredictionsByMatch.get(match.id) ?? []}
             mentionableUsers={mentionableUsers}
             currentUserId={currentUserId}
+            locale={locale}
           />
         ))}
       </div>

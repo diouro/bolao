@@ -4,6 +4,7 @@ import { Check } from "lucide-react";
 import { useActionState, useMemo, useRef, useState } from "react";
 import { addMatchComment } from "@/app/(app)/comments/actions";
 import { Button } from "@/components/button";
+import { t, type Locale } from "@/lib/i18n";
 import type { MentionableUser } from "@/lib/types";
 
 type ActiveMention = {
@@ -15,10 +16,12 @@ export function MatchCommentForm({
   matchId,
   mentionableUsers,
   currentUserId,
+  locale,
 }: {
   matchId: string;
   mentionableUsers: MentionableUser[];
   currentUserId: string;
+  locale: Locale;
 }) {
   const [value, setValue] = useState("");
   const [caretPosition, setCaretPosition] = useState(0);
@@ -94,7 +97,7 @@ export function MatchCommentForm({
           onKeyUp={updateCaret}
           maxLength={500}
           required
-          placeholder="Add a comment... type @ to mention a friend"
+          placeholder={t(locale, "comments.placeholder")}
           className="min-h-11 w-full resize-y rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-950 outline-none transition focus:border-zinc-400 focus:ring-4 focus:ring-zinc-100"
         />
         {suggestions.length > 0 && (
@@ -129,9 +132,9 @@ export function MatchCommentForm({
       </div>
       <Button
         className="h-11 bg-emerald-600 px-5 hover:bg-emerald-700"
-        pendingChildren="Posting"
+        pendingChildren={t(locale, "comments.posting")}
       >
-        Post
+        {t(locale, "comments.post")}
       </Button>
     </form>
   );
