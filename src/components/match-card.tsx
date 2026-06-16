@@ -171,28 +171,48 @@ function MatchBody({
   locale: Locale;
 }) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_3.75rem_auto_3.75rem_minmax(0,1fr)] items-center gap-2 px-5 py-6 sm:grid-cols-[minmax(0,1fr)_5rem_auto_5rem_minmax(0,1fr)] sm:gap-4 sm:px-6">
-      <TeamSide name={home.name} code={home.code} slot={home.slot} />
-      <PredictionScoreBox
-        side="home"
-        editable={editable}
-        matchId={matchId}
-        value={homePrediction}
-      />
-      <MatchStatus
-        hasStarted={hasStarted}
-        hasScore={hasScore}
-        homeScore={homeScore}
-        awayScore={awayScore}
-        locale={locale}
-      />
-      <PredictionScoreBox
-        side="away"
-        editable={editable}
-        matchId={matchId}
-        value={awayPrediction}
-      />
-      <TeamSide name={away.name} code={away.code} slot={away.slot} align="right" />
+    <div className="px-5 py-6 sm:grid sm:grid-cols-[minmax(0,1fr)_5rem_auto_5rem_minmax(0,1fr)] sm:items-center sm:gap-4 sm:px-6">
+      <div className="grid grid-cols-2 items-start gap-4 sm:contents">
+        <div className="sm:order-1">
+          <TeamSide name={home.name} code={home.code} slot={home.slot} />
+        </div>
+        <div className="sm:order-5">
+          <TeamSide
+            name={away.name}
+            code={away.code}
+            slot={away.slot}
+            align="right"
+          />
+        </div>
+      </div>
+
+      <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:contents">
+        <div className="sm:order-2">
+          <PredictionScoreBox
+            side="home"
+            editable={editable}
+            matchId={matchId}
+            value={homePrediction}
+          />
+        </div>
+        <div className="sm:order-3">
+          <MatchStatus
+            hasStarted={hasStarted}
+            hasScore={hasScore}
+            homeScore={homeScore}
+            awayScore={awayScore}
+            locale={locale}
+          />
+        </div>
+        <div className="sm:order-4">
+          <PredictionScoreBox
+            side="away"
+            editable={editable}
+            matchId={matchId}
+            value={awayPrediction}
+          />
+        </div>
+      </div>
     </div>
   );
 }
@@ -245,7 +265,7 @@ function PredictionScoreBox({
   if (!editable) {
     return (
       <div className="flex justify-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 text-xl font-black text-zinc-700 shadow-sm sm:h-16 sm:w-20">
+        <div className="flex h-14 w-16 items-center justify-center rounded-2xl border border-zinc-200 bg-zinc-50 text-xl font-black text-zinc-700 shadow-sm sm:h-16 sm:w-20">
           {value ?? "-"}
         </div>
       </div>
@@ -264,7 +284,7 @@ function PredictionScoreBox({
         min={0}
         max={30}
         defaultValue={value ?? ""}
-        className="mt-0 h-14 w-14 rounded-2xl border-zinc-300 bg-white text-center text-xl font-black shadow-sm sm:h-16 sm:w-20"
+        className="mt-0 h-14 w-16 rounded-2xl border-zinc-300 bg-white text-center text-xl font-black shadow-sm sm:h-16 sm:w-20"
         required
       />
     </div>
@@ -347,8 +367,8 @@ function TeamSide({
     <div
       className={
         align === "right"
-          ? "flex min-w-0 flex-col items-end gap-3 text-right sm:flex-row-reverse"
-          : "flex min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center"
+          ? "flex min-w-0 flex-col items-end gap-2 text-right sm:flex-row-reverse sm:gap-3"
+          : "flex min-w-0 flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-3"
       }
     >
       <CountryFlag
@@ -357,7 +377,7 @@ function TeamSide({
         className="h-10 w-14 rounded-xl object-cover shadow-sm ring-1 ring-zinc-200"
       />
       <div className="min-w-0">
-        <div className="truncate text-lg font-black text-zinc-950 sm:text-xl">
+        <div className="max-w-32 truncate text-base font-black text-zinc-950 sm:max-w-none sm:text-xl">
           {name}
         </div>
         <div className="text-xs font-semibold uppercase tracking-wide text-zinc-400">

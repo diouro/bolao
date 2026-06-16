@@ -126,29 +126,32 @@ export async function AppShell({
 
       <section className="pb-20 lg:pb-0">
         <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-600 text-white">
                 <Trophy className="h-5 w-5" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-black text-zinc-950">Bolão</p>
                   {profile.has_paid && <PaidBadge />}
                 </div>
-                <p className="text-xs text-zinc-500">{profile.email}</p>
+                <p className="truncate text-xs text-zinc-500">{profile.email}</p>
               </div>
             </div>
-            <form action={logout}>
-              <input type="hidden" name="redirectTo" value="/signin" />
-              <Button
-                className="h-10 w-10 border border-zinc-200 bg-white p-0 text-zinc-700 hover:bg-zinc-50"
-                pendingChildren={<span className="sr-only">{t(locale, "app.loggingOut")}</span>}
-                aria-label={t(locale, "app.logout")}
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </form>
+            <div className="flex shrink-0 items-center gap-2">
+              <LanguageSwitcher locale={locale} compact />
+              <form action={logout}>
+                <input type="hidden" name="redirectTo" value="/signin" />
+                <Button
+                  className="h-10 w-10 border border-zinc-200 bg-white p-0 text-zinc-700 hover:bg-zinc-50"
+                  pendingChildren={<span className="sr-only">{t(locale, "app.loggingOut")}</span>}
+                  aria-label={t(locale, "app.logout")}
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </form>
+            </div>
           </div>
         </header>
         <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">

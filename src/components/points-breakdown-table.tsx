@@ -30,16 +30,16 @@ export function PointsBreakdownTable({
         <table className="min-w-max border-separate border-spacing-0 text-sm">
           <thead>
             <tr>
-              <StickyHeader className="left-0 z-30 min-w-56">
+              <StickyHeader className="left-0 z-30 w-40 min-w-40 sm:w-56 sm:min-w-56">
                 {t(locale, "breakdown.player")}
               </StickyHeader>
-              <StickyHeader className="left-56 z-30 min-w-24 text-right">
+              <StickyHeader className="left-40 z-30 w-16 min-w-16 px-2 text-right sm:left-56 sm:w-24 sm:min-w-24 sm:px-4">
                 {t(locale, "breakdown.total")}
               </StickyHeader>
               {breakdown.matches.map((match) => (
                 <th
                   key={match.id}
-                  className="sticky top-0 z-20 min-w-36 border-b border-zinc-200 bg-zinc-50 px-3 py-3 text-left text-xs font-bold uppercase tracking-wide text-zinc-500"
+                  className="sticky top-0 z-20 min-w-28 border-b border-zinc-200 bg-zinc-50 px-3 py-3 text-left text-xs font-bold uppercase tracking-wide text-zinc-500 sm:min-w-36"
                 >
                   <div className="truncate">{getMatchLabel(match)}</div>
                   <div className="mt-1 text-[11px] font-semibold normal-case text-zinc-400">
@@ -52,7 +52,7 @@ export function PointsBreakdownTable({
           <tbody>
             {breakdown.users.map((user) => (
               <tr key={user.profile.id} className="group">
-                <td className="sticky left-0 z-10 border-b border-zinc-100 bg-white px-4 py-3 group-hover:bg-zinc-50">
+                <td className="sticky left-0 z-10 w-40 max-w-40 border-b border-zinc-100 bg-white px-3 py-3 group-hover:bg-zinc-50 sm:w-56 sm:max-w-56 sm:px-4">
                   <div className="flex items-center gap-2">
                     <div className="min-w-0">
                       <div className="truncate font-bold text-zinc-950">
@@ -73,7 +73,7 @@ export function PointsBreakdownTable({
                     )}
                   </div>
                 </td>
-                <td className="sticky left-56 z-10 border-b border-zinc-100 bg-white px-4 py-3 text-right text-lg font-black text-emerald-700 group-hover:bg-zinc-50">
+                <td className="sticky left-40 z-10 w-16 border-b border-zinc-100 bg-white px-2 py-3 text-right text-lg font-black text-emerald-700 group-hover:bg-zinc-50 sm:left-56 sm:w-24 sm:px-4">
                   {user.totalPoints}
                 </td>
                 {user.cells.map((cell) => (

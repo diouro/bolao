@@ -26,7 +26,7 @@ export function LanguageSwitcher({
           )}
           aria-label={localeLabels[item]}
         >
-          {item.toUpperCase()}
+          {compact && item === "pt" ? "PT" : item.toUpperCase()}
         </button>
       ))}
     </form>
