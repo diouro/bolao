@@ -1,9 +1,11 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Activity } from "lucide-react";
 import { Badge, Card } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import { formatAppDateTime } from "@/lib/dates";
 import {
+  FRIENDS_ACTIVITY_PAGE_SIZE,
   getFriendsActivity,
   type FriendsActivityItem,
   type FriendsActivityKind,
@@ -30,10 +32,22 @@ const kindBadgeStyles: Record<FriendsActivityKind, string> = {
   joined: "bg-violet-50 text-violet-700",
 };
 
-export default async function AdminActivityPage() {
+export default async function AdminActivityPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const profile = await requireAdmin();
+  const params = await searchParams;
   const locale = await getLocale();
-  const activities = await getFriendsActivity(profile.id);
+  const requestedPage = Number.parseInt(params.page ?? "1", 10);
+  const page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const { activities, total, totalPages } = await getFriendsActivity(profile.id, {
+    page,
+    pageSize: FRIENDS_ACTIVITY_PAGE_SIZE,
+  });
+  const rangeStart = total === 0 ? 0 : (page - 1) * FRIENDS_ACTIVITY_PAGE_SIZE + 1;
+  const rangeEnd = Math.min(page * FRIENDS_ACTIVITY_PAGE_SIZE, total);
 
   return (
     <>
@@ -48,6 +62,16 @@ export default async function AdminActivityPage() {
           {t(locale, "admin.activity.subtitle")}
         </p>
       </div>
+
+      {total > 0 && (
+        <p className="mb-4 text-sm font-medium text-zinc-500">
+          {t(locale, "admin.activity.showing", {
+            from: String(rangeStart),
+            to: String(rangeEnd),
+            total: String(total),
+          })}
+        </p>
+      )}
 
       <div className="grid gap-4">
         {activities.length > 0 ? (
@@ -72,8 +96,133 @@ export default async function AdminActivityPage() {
           </Card>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <ActivityPagination
+          locale={locale}
+          page={page}
+          totalPages={totalPages}
+        />
+      )}
     </>
   );
+}
+
+function ActivityPagination({
+  locale,
+  page,
+  totalPages,
+}: {
+  locale: Locale;
+  page: number;
+  totalPages: number;
+}) {
+  const pages = getPaginationPages(page, totalPages);
+
+  return (
+    <nav
+      className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      aria-label={t(locale, "admin.activity.pagination")}
+    >
+      <p className="text-sm font-semibold text-zinc-500">
+        {t(locale, "admin.activity.page", {
+          page: String(page),
+          totalPages: String(totalPages),
+        })}
+      </p>
+      <div className="flex flex-wrap items-center gap-2">
+        {page > 1 ? (
+          <PaginationLink href={`/admin/activity?page=${page - 1}`}>
+            {t(locale, "admin.activity.previous")}
+          </PaginationLink>
+        ) : (
+          <PaginationLink disabled>{t(locale, "admin.activity.previous")}</PaginationLink>
+        )}
+        {pages.map((item, index) =>
+          item === "ellipsis" ? (
+            <span
+              key={`ellipsis-${index}`}
+              className="px-2 text-sm font-semibold text-zinc-400"
+            >
+              ...
+            </span>
+          ) : (
+            <PaginationLink
+              key={item}
+              href={`/admin/activity?page=${item}`}
+              active={item === page}
+            >
+              {item}
+            </PaginationLink>
+          ),
+        )}
+        {page < totalPages ? (
+          <PaginationLink href={`/admin/activity?page=${page + 1}`}>
+            {t(locale, "admin.activity.next")}
+          </PaginationLink>
+        ) : (
+          <PaginationLink disabled>{t(locale, "admin.activity.next")}</PaginationLink>
+        )}
+      </div>
+    </nav>
+  );
+}
+
+function PaginationLink({
+  href,
+  active = false,
+  disabled = false,
+  children,
+}: {
+  href?: string;
+  active?: boolean;
+  disabled?: boolean;
+  children: ReactNode;
+}) {
+  const className = cn(
+    "inline-flex min-w-10 items-center justify-center rounded-xl border px-3 py-2 text-sm font-semibold transition",
+    active
+      ? "border-emerald-600 bg-emerald-600 text-white"
+      : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50",
+    disabled && "pointer-events-none opacity-40",
+  );
+
+  if (!href || disabled) {
+    return <span className={className}>{children}</span>;
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {children}
+    </Link>
+  );
+}
+
+function getPaginationPages(page: number, totalPages: number) {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, index) => index + 1);
+  }
+
+  const pages: Array<number | "ellipsis"> = [1];
+
+  if (page > 3) {
+    pages.push("ellipsis");
+  }
+
+  const start = Math.max(2, page - 1);
+  const end = Math.min(totalPages - 1, page + 1);
+
+  for (let current = start; current <= end; current += 1) {
+    pages.push(current);
+  }
+
+  if (page < totalPages - 2) {
+    pages.push("ellipsis");
+  }
+
+  pages.push(totalPages);
+
+  return pages;
 }
 
 function ActivityCard({

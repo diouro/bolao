@@ -97,20 +97,25 @@ export async function AppShell({
             </NavItem>
           ))}
           {profile.role === "admin" && (
-            <>
-              <NavItem
-                href="/admin/results"
-                icon={<Shield className="h-4 w-4" />}
-              >
-                {t(locale, "app.resultsAdmin")}
-              </NavItem>
-              <NavItem
-                href="/admin/activity"
-                icon={<Activity className="h-4 w-4" />}
-              >
-                {t(locale, "app.activityAdmin")}
-              </NavItem>
-            </>
+            <div className="mt-4 border-t border-zinc-200 pt-4">
+              <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-400">
+                {t(locale, "app.adminNav")}
+              </p>
+              <div className="space-y-1">
+                <NavItem
+                  href="/admin/results"
+                  icon={<Shield className="h-4 w-4" />}
+                >
+                  {t(locale, "app.resultsAdmin")}
+                </NavItem>
+                <NavItem
+                  href="/admin/activity"
+                  icon={<Activity className="h-4 w-4" />}
+                >
+                  {t(locale, "app.activityAdmin")}
+                </NavItem>
+              </div>
+            </div>
           )}
         </nav>
         <div className="border-t border-zinc-200 p-4">

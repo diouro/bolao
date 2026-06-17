@@ -29,13 +29,28 @@ type MatchCommentRow = {
   created_at: string;
 };
 
-const SOURCE_LIMIT = 75;
-const FEED_LIMIT = 150;
+const SOURCE_LIMIT = 100;
 const PREDICTION_UPDATE_THRESHOLD_MS = 1_000;
+
+export const FRIENDS_ACTIVITY_PAGE_SIZE = 20;
+
+export type FriendsActivityPage = {
+  activities: FriendsActivityItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
 
 export async function getFriendsActivity(
   excludeUserId?: string,
-): Promise<FriendsActivityItem[]> {
+  options: {
+    page?: number;
+    pageSize?: number;
+  } = {},
+): Promise<FriendsActivityPage> {
+  const pageSize = options.pageSize ?? FRIENDS_ACTIVITY_PAGE_SIZE;
+  const requestedPage = options.page ?? 1;
   const supabase = await createSupabaseServerClient();
   let profilesQuery = supabase
     .from("profiles")
@@ -55,7 +70,13 @@ export async function getFriendsActivity(
   const friendIds = friends.map((profile) => profile.id);
 
   if (friendIds.length === 0) {
-    return [];
+    return {
+      activities: [],
+      total: 0,
+      page: 1,
+      pageSize,
+      totalPages: 1,
+    };
   }
 
   const [
@@ -172,13 +193,23 @@ export async function getFriendsActivity(
     }),
   ];
 
-  return items
-    .sort(
-      (left, right) =>
-        new Date(right.occurredAt).getTime() -
-        new Date(left.occurredAt).getTime(),
-    )
-    .slice(0, FEED_LIMIT);
+  const sortedItems = items.sort(
+    (left, right) =>
+      new Date(right.occurredAt).getTime() -
+      new Date(left.occurredAt).getTime(),
+  );
+  const total = sortedItems.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(Math.max(1, requestedPage), totalPages);
+  const start = (page - 1) * pageSize;
+
+  return {
+    activities: sortedItems.slice(start, start + pageSize),
+    total,
+    page,
+    pageSize,
+    totalPages,
+  };
 }
 
 async function getMatchesById(ids: string[]) {
