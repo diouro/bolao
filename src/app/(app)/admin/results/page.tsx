@@ -4,12 +4,13 @@ import { ResultForm } from "@/components/result-form";
 import { Badge, Card } from "@/components/ui";
 import { syncFinishedResults } from "@/app/(app)/admin/results/actions";
 import { requireAdmin } from "@/lib/auth";
-import { formatAppDateTime } from "@/lib/dates";
-import { t, type Locale } from "@/lib/i18n";
+import { formatAppDateHeader, formatAppDateTime, getAppDateKey } from "@/lib/dates";
+import { getIntlLocale, t, type Locale } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { getAllMatches } from "@/lib/matches";
 import { resolveMatchSide } from "@/lib/tournament/resolve-slots";
 import type { Match } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -26,12 +27,15 @@ export default async function AdminResultsPage({
   await requireAdmin();
   const params = await searchParams;
   const locale = await getLocale();
+  const intlLocale = getIntlLocale(locale);
   const matches = await getAllMatches();
   const nowMs = new Date().getTime();
+  const todayKey = getAppDateKey(new Date());
   const matchesToShow = matches.filter((match) => {
     const kickoff = new Date(match.kickoff_at).getTime();
     return kickoff <= nowMs || match.status === "finished";
   });
+  const matchDays = groupAdminMatchesByDay(matchesToShow, intlLocale);
 
   return (
     <>
@@ -62,10 +66,34 @@ export default async function AdminResultsPage({
         error={params.syncError}
       />
 
-      <div className="grid gap-4">
-        {matchesToShow.length > 0 ? (
-          matchesToShow.map((match) => (
-            <ResultRow key={match.id} match={match} locale={locale} />
+      <div className="space-y-8">
+        {matchDays.length > 0 ? (
+          matchDays.map((day) => (
+            <section key={day.dateKey} className="space-y-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <h2
+                  className={cn(
+                    "text-lg font-black text-zinc-950 sm:text-xl",
+                    day.dateKey === todayKey && "text-emerald-800",
+                  )}
+                >
+                  {day.dateLabel}
+                </h2>
+                {day.dateKey === todayKey && (
+                  <Badge className="bg-emerald-600 text-white">
+                    {t(locale, "schedule.today")}
+                  </Badge>
+                )}
+                <span className="text-sm font-semibold text-zinc-500">
+                  {t(locale, "schedule.matches", { count: day.matches.length })}
+                </span>
+              </div>
+              <div className="grid gap-4">
+                {day.matches.map((match) => (
+                  <ResultRow key={match.id} match={match} locale={locale} />
+                ))}
+              </div>
+            </section>
           ))
         ) : (
           <Card>
@@ -78,6 +106,27 @@ export default async function AdminResultsPage({
       </div>
     </>
   );
+}
+
+function groupAdminMatchesByDay(matches: Match[], intlLocale: string) {
+  const map = new Map<string, Match[]>();
+
+  for (const match of matches) {
+    const dateKey = getAppDateKey(match.kickoff_at);
+    const existing = map.get(dateKey) ?? [];
+    existing.push(match);
+    map.set(dateKey, existing);
+  }
+
+  return [...map.entries()]
+    .sort(([left], [right]) => right.localeCompare(left))
+    .map(([dateKey, dayMatches]) => ({
+      dateKey,
+      dateLabel: formatAppDateHeader(dayMatches[0]!.kickoff_at, intlLocale),
+      matches: [...dayMatches].sort((left, right) =>
+        right.kickoff_at.localeCompare(left.kickoff_at),
+      ),
+    }));
 }
 
 function SyncFeedback({

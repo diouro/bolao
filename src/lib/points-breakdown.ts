@@ -1,3 +1,4 @@
+import { getAppDateKey } from "@/lib/dates";
 import { calculatePoints } from "@/lib/scoring/calculate-points";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Match, Prediction, Profile, ScoreBreakdown } from "@/lib/types";
@@ -109,4 +110,47 @@ export async function getPointsBreakdown(): Promise<PointsBreakdown> {
     matches: finishedMatches,
     users,
   };
+}
+
+export function getBreakdownScrollTargetMatchId(
+  matches: Match[],
+  todayKey: string,
+) {
+  if (matches.length === 0) {
+    return null;
+  }
+
+  const dateKeys = [
+    ...new Set(matches.map((match) => getAppDateKey(match.kickoff_at))),
+  ].sort();
+  const targetDateKey = getBreakdownScrollTargetDateKey(dateKeys, todayKey);
+
+  if (!targetDateKey) {
+    return matches[0]!.id;
+  }
+
+  return (
+    matches.find((match) => getAppDateKey(match.kickoff_at) === targetDateKey)
+      ?.id ?? matches[0]!.id
+  );
+}
+
+export function getBreakdownScrollTargetDateKey(
+  dateKeys: string[],
+  todayKey: string,
+) {
+  if (dateKeys.length === 0) {
+    return null;
+  }
+
+  if (dateKeys.includes(todayKey)) {
+    return todayKey;
+  }
+
+  const nextDay = dateKeys.find((dateKey) => dateKey >= todayKey);
+  if (nextDay) {
+    return nextDay;
+  }
+
+  return dateKeys[dateKeys.length - 1] ?? null;
 }

@@ -39,6 +39,18 @@ export function formatAppDateHeader(
   }).format(new Date(value));
 }
 
+export function formatAppDateShort(
+  value: string | Date,
+  intlLocale = "en",
+) {
+  return new Intl.DateTimeFormat(intlLocale, {
+    timeZone: getAppTimeZone(),
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(value));
+}
+
 export function formatAppTime(value: string | Date, intlLocale = "en") {
   return new Intl.DateTimeFormat(intlLocale, {
     timeZone: getAppTimeZone(),

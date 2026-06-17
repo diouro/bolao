@@ -1,15 +1,25 @@
 import { PointsBreakdownTable } from "@/components/points-breakdown-table";
 import { Card } from "@/components/ui";
-import { t } from "@/lib/i18n";
+import { getAppDateKey } from "@/lib/dates";
+import { getIntlLocale, t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
-import { getPointsBreakdown } from "@/lib/points-breakdown";
+import {
+  getBreakdownScrollTargetMatchId,
+  getPointsBreakdown,
+} from "@/lib/points-breakdown";
 
 export const dynamic = "force-dynamic";
 
 export default async function BreakdownPage() {
   const locale = await getLocale();
+  const intlLocale = getIntlLocale(locale);
   const breakdown = await getPointsBreakdown();
   const finishedMatches = breakdown.matches.length;
+  const todayKey = getAppDateKey(new Date());
+  const scrollToMatchId = getBreakdownScrollTargetMatchId(
+    breakdown.matches,
+    todayKey,
+  );
 
   return (
     <>
@@ -34,7 +44,13 @@ export default async function BreakdownPage() {
         />
       </div>
 
-      <PointsBreakdownTable breakdown={breakdown} locale={locale} />
+      <PointsBreakdownTable
+        breakdown={breakdown}
+        locale={locale}
+        intlLocale={intlLocale}
+        todayKey={todayKey}
+        scrollToMatchId={scrollToMatchId}
+      />
     </>
   );
 }
