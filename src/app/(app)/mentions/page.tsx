@@ -3,19 +3,19 @@ import { clearAllMentions } from "@/app/(app)/mentions/actions";
 import { Button } from "@/components/button";
 import { MentionLink } from "@/components/mention-link";
 import { Badge, Card } from "@/components/ui";
-import { requireProfile } from "@/lib/auth";
 import { formatAppDateTime } from "@/lib/dates";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { getMentionLogs } from "@/lib/mentions";
 import { getMentionHandle } from "@/lib/profiles";
+import { requireAppContext } from "@/lib/pools/context";
 
 export const dynamic = "force-dynamic";
 
 export default async function MentionsPage() {
-  const profile = await requireProfile();
+  const { profile, poolId } = await requireAppContext();
   const locale = await getLocale();
-  const mentions = await getMentionLogs(profile);
+  const mentions = await getMentionLogs(profile, poolId);
   const handle = getMentionHandle(profile);
 
   return (

@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getPoolMemberProfiles } from "@/lib/pools/members";
 import { resolveMatchSide } from "@/lib/tournament/resolve-slots";
-import type { ChatMessage, Match, Prediction, Profile } from "@/lib/types";
+import type { ChatMessage, Match, Prediction } from "@/lib/types";
 
 export type FriendsActivityKind =
   | "prediction"
@@ -43,6 +44,7 @@ export type FriendsActivityPage = {
 };
 
 export async function getFriendsActivity(
+  poolId: string,
   excludeUserId?: string,
   options: {
     page?: number;
@@ -52,21 +54,12 @@ export async function getFriendsActivity(
   const pageSize = options.pageSize ?? FRIENDS_ACTIVITY_PAGE_SIZE;
   const requestedPage = options.page ?? 1;
   const supabase = await createSupabaseServerClient();
-  let profilesQuery = supabase
-    .from("profiles")
-    .select("id, display_name, email, created_at");
+  let friends = await getPoolMemberProfiles(poolId);
 
   if (excludeUserId) {
-    profilesQuery = profilesQuery.neq("id", excludeUserId);
+    friends = friends.filter((profile) => profile.id !== excludeUserId);
   }
 
-  const { data: profiles, error: profilesError } = await profilesQuery;
-
-  if (profilesError) {
-    throw new Error(profilesError.message);
-  }
-
-  const friends = (profiles ?? []) as Profile[];
   const friendIds = friends.map((profile) => profile.id);
 
   if (friendIds.length === 0) {
@@ -93,12 +86,14 @@ export async function getFriendsActivity(
     supabase
       .from("chat_messages")
       .select("*")
+      .eq("pool_id", poolId)
       .in("user_id", friendIds)
       .order("created_at", { ascending: false })
       .limit(SOURCE_LIMIT),
     supabase
       .from("match_comments")
-      .select("id, match_id, user_id, body, created_at")
+      .select("id, pool_id, match_id, user_id, body, created_at")
+      .eq("pool_id", poolId)
       .in("user_id", friendIds)
       .order("created_at", { ascending: false })
       .limit(SOURCE_LIMIT),
@@ -132,7 +127,7 @@ export async function getFriendsActivity(
     ...friends.map((profile) => ({
       id: `joined:${profile.id}`,
       kind: "joined" as const,
-      occurredAt: profile.created_at,
+      occurredAt: profile.pool_joined_at,
       authorId: profile.id,
       authorName: profile.display_name,
       authorEmail: profile.email,

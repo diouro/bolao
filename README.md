@@ -83,11 +83,22 @@ cp .env.local.multipool .env.local
 npm run dev
 ```
 
-Optional — copy production data into the local database:
+Optional — copy production data into the local database (read-only from prod):
 
 ```bash
-npm run db:local:clone          # reads POSTGRES_URL_NON_POOLING from .env.production
+cp env.production.readonly.example .env.production.readonly
+# paste POSTGRES_URL_NON_POOLING from production (port 5432)
+npm run db:local:clone
 ```
+
+`db:local:clone` only **reads** from production (`pg_dump`). All writes go to local Docker.
+You usually only need this once, or when you want a fresh copy. For day-to-day multi-pool work:
+
+```bash
+npm run db:local:reset   # re-apply migrations locally, no prod contact
+```
+
+**Never run** `npm run vercel:migrate:prod` while working on multi-pool locally — that pushes migrations to production.
 
 Other commands:
 

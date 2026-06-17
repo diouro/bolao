@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Activity } from "lucide-react";
 import { Badge, Card } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
+import { requireAppContext } from "@/lib/pools/context";
 import { formatAppDateTime } from "@/lib/dates";
 import {
   FRIENDS_ACTIVITY_PAGE_SIZE,
@@ -38,11 +39,12 @@ export default async function AdminActivityPage({
   searchParams: Promise<{ page?: string }>;
 }) {
   const profile = await requireAdmin();
+  const { poolId } = await requireAppContext();
   const params = await searchParams;
   const locale = await getLocale();
   const requestedPage = Number.parseInt(params.page ?? "1", 10);
   const page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
-  const { activities, total, totalPages } = await getFriendsActivity(profile.id, {
+  const { activities, total, totalPages } = await getFriendsActivity(poolId, profile.id, {
     page,
     pageSize: FRIENDS_ACTIVITY_PAGE_SIZE,
   });

@@ -1,5 +1,37 @@
 export type ProfileRole = "player" | "admin";
 
+export type PoolRole = "owner" | "admin" | "member";
+
+export type Pool = {
+  id: string;
+  name: string;
+  slug: string;
+  invite_code: string;
+  created_by: string;
+  created_at: string;
+};
+
+export type PoolMember = {
+  pool_id: string;
+  user_id: string;
+  role: PoolRole;
+  has_paid: boolean;
+  joined_at: string;
+  left_at: string | null;
+};
+
+export type PoolMembership = {
+  pool: Pool;
+  role: PoolRole;
+  has_paid: boolean;
+  joined_at: string;
+};
+
+export type PoolMemberProfile = Profile & {
+  pool_role: PoolRole;
+  pool_joined_at: string;
+};
+
 export type TournamentRound =
   | "group"
   | "round_of_32"
@@ -84,6 +116,7 @@ export type Prediction = {
 
 export type MatchComment = {
   id: string;
+  pool_id: string;
   match_id: string;
   user_id: string;
   body: string;
@@ -94,6 +127,7 @@ export type MatchComment = {
 
 export type ChatMessage = {
   id: string;
+  pool_id: string;
   user_id: string;
   body: string;
   created_at: string;

@@ -1,7 +1,8 @@
 import { getAppDateKey } from "@/lib/dates";
+import { getPoolMemberProfiles } from "@/lib/pools/members";
 import { calculatePoints } from "@/lib/scoring/calculate-points";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { Match, Prediction, Profile, ScoreBreakdown } from "@/lib/types";
+import type { Match, Prediction, PoolMemberProfile, ScoreBreakdown } from "@/lib/types";
 
 export type MatchBreakdownCell = {
   match: Match;
@@ -10,7 +11,7 @@ export type MatchBreakdownCell = {
 };
 
 export type UserPointsBreakdown = {
-  profile: Profile;
+  profile: PoolMemberProfile;
   totalPoints: number;
   exactHits: number;
   outcomeHits: number;
@@ -22,14 +23,14 @@ export type PointsBreakdown = {
   users: UserPointsBreakdown[];
 };
 
-export async function getPointsBreakdown(): Promise<PointsBreakdown> {
+export async function getPointsBreakdown(poolId: string): Promise<PointsBreakdown> {
   const supabase = await createSupabaseServerClient();
   const [
-    { data: profiles, error: profilesError },
+    profiles,
     { data: matches, error: matchesError },
     { data: predictions, error: predictionsError },
   ] = await Promise.all([
-    supabase.from("profiles").select("*").order("created_at", { ascending: true }),
+    getPoolMemberProfiles(poolId),
     supabase
       .from("matches")
       .select("*")
@@ -37,10 +38,6 @@ export async function getPointsBreakdown(): Promise<PointsBreakdown> {
       .order("kickoff_at", { ascending: true }),
     supabase.from("predictions").select("*"),
   ]);
-
-  if (profilesError) {
-    throw new Error(profilesError.message);
-  }
 
   if (matchesError) {
     throw new Error(matchesError.message);
@@ -60,7 +57,7 @@ export async function getPointsBreakdown(): Promise<PointsBreakdown> {
     );
   });
 
-  const users = ((profiles ?? []) as Profile[])
+  const users = profiles
     .map((profile) => {
       const cells = finishedMatches.map((match) => {
         const prediction =

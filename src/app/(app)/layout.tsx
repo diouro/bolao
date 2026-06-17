@@ -1,11 +1,21 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
-import { requireProfile } from "@/lib/auth";
+import { requireAppContext } from "@/lib/pools/context";
 
 export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
-  const profile = await requireProfile();
+  const { profile, pool, poolId, membership, memberships } = await requireAppContext();
 
-  return <AppShell profile={profile}>{children}</AppShell>;
+  return (
+    <AppShell
+      profile={profile}
+      pool={pool}
+      poolId={poolId}
+      membership={membership}
+      memberships={memberships}
+    >
+      {children}
+    </AppShell>
+  );
 }

@@ -3,15 +3,18 @@ import {
   CHAT_MESSAGES_PAGE_SIZE,
   type ChatMessageWithAuthor,
 } from "@/lib/chat-types";
-import type { ChatMessage, Profile } from "@/lib/types";
+import { getPoolMemberProfiles } from "@/lib/pools/members";
+import type { ChatMessage } from "@/lib/types";
 
 export async function getLatestChatMessages(
+  poolId: string,
   limit = CHAT_MESSAGES_PAGE_SIZE,
 ): Promise<ChatMessageWithAuthor[]> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("chat_messages")
     .select("*")
+    .eq("pool_id", poolId)
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -19,13 +22,15 @@ export async function getLatestChatMessages(
     throw new Error(error.message);
   }
 
-  return hydrateChatAuthors(((data ?? []) as ChatMessage[]).reverse());
+  return hydrateChatAuthors(poolId, ((data ?? []) as ChatMessage[]).reverse());
 }
 
 export async function getOlderChatMessages({
+  poolId,
   before,
   limit = CHAT_MESSAGES_PAGE_SIZE,
 }: {
+  poolId: string;
   before: string;
   limit?: number;
 }): Promise<ChatMessageWithAuthor[]> {
@@ -33,6 +38,7 @@ export async function getOlderChatMessages({
   const { data, error } = await supabase
     .from("chat_messages")
     .select("*")
+    .eq("pool_id", poolId)
     .lt("created_at", before)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -41,14 +47,15 @@ export async function getOlderChatMessages({
     throw new Error(error.message);
   }
 
-  return hydrateChatAuthors(((data ?? []) as ChatMessage[]).reverse());
+  return hydrateChatAuthors(poolId, ((data ?? []) as ChatMessage[]).reverse());
 }
 
-export async function getUnreadChatMessageCount(userId: string) {
+export async function getUnreadChatMessageCount(poolId: string, userId: string) {
   const supabase = await createSupabaseServerClient();
   const { data: readState, error: readError } = await supabase
     .from("chat_reads")
     .select("last_read_at")
+    .eq("pool_id", poolId)
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -59,6 +66,7 @@ export async function getUnreadChatMessageCount(userId: string) {
   let query = supabase
     .from("chat_messages")
     .select("id", { count: "exact", head: true })
+    .eq("pool_id", poolId)
     .neq("user_id", userId);
 
   if (readState?.last_read_at) {
@@ -74,25 +82,13 @@ export async function getUnreadChatMessageCount(userId: string) {
   return count ?? 0;
 }
 
-async function hydrateChatAuthors(messages: ChatMessage[]) {
+async function hydrateChatAuthors(poolId: string, messages: ChatMessage[]) {
   if (messages.length === 0) {
     return [];
   }
 
-  const supabase = await createSupabaseServerClient();
-  const userIds = Array.from(new Set(messages.map((message) => message.user_id)));
-  const { data: profiles, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .in("id", userIds);
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const profilesById = new Map(
-    ((profiles ?? []) as Profile[]).map((profile) => [profile.id, profile]),
-  );
+  const profiles = await getPoolMemberProfiles(poolId);
+  const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
 
   return messages.map((message) => {
     const profile = profilesById.get(message.user_id);

@@ -8,17 +8,20 @@ import { cn } from "@/lib/utils";
 type ChatMessagePayload = {
   id?: string;
   user_id?: string;
+  pool_id?: string;
 };
 
 export function ChatNavBadge({
   initialCount,
   currentUserId,
+  poolId,
   channelKey,
   disabled: disabledProp = false,
   className,
 }: {
   initialCount: number;
   currentUserId: string;
+  poolId: string;
   channelKey: string;
   disabled?: boolean;
   className?: string;
@@ -36,13 +39,14 @@ export function ChatNavBadge({
     const supabase = createSupabaseBrowserClient();
     const seenMessageIds = new Set<string>();
     const channel = supabase
-      .channel(`chat-badge-${currentUserId}-${channelKey}`)
+      .channel(`chat-badge-${poolId}-${currentUserId}-${channelKey}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "chat_messages",
+          filter: `pool_id=eq.${poolId}`,
         },
         (payload) => {
           const message = payload.new as ChatMessagePayload;
@@ -65,7 +69,7 @@ export function ChatNavBadge({
           event: "*",
           schema: "public",
           table: "chat_reads",
-          filter: `user_id=eq.${currentUserId}`,
+          filter: `pool_id=eq.${poolId},user_id=eq.${currentUserId}`,
         },
         () => setCount(0),
       )
@@ -74,7 +78,7 @@ export function ChatNavBadge({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [channelKey, currentUserId, disabled]);
+  }, [channelKey, currentUserId, disabled, poolId]);
 
   if (disabled || count <= 0) {
     return null;

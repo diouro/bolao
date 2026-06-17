@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getPoolMemberProfiles } from "@/lib/pools/members";
 import type { ChatMessage, Match, MatchComment, Profile } from "@/lib/types";
 import { getMentionHandle } from "@/lib/profiles";
 
@@ -17,10 +18,13 @@ export type MentionSource = MentionLogItem["source"];
 
 type MatchCommentRow = Pick<
   MatchComment,
-  "id" | "match_id" | "user_id" | "body" | "created_at"
+  "id" | "pool_id" | "match_id" | "user_id" | "body" | "created_at"
 >;
 
-export async function getMentionLogs(profile: Profile): Promise<MentionLogItem[]> {
+export async function getMentionLogs(
+  profile: Profile,
+  poolId: string,
+): Promise<MentionLogItem[]> {
   const handle = getMentionHandle(profile);
   const supabase = await createSupabaseServerClient();
   const [
@@ -30,12 +34,14 @@ export async function getMentionLogs(profile: Profile): Promise<MentionLogItem[]
     supabase
       .from("chat_messages")
       .select("*")
+      .eq("pool_id", poolId)
       .ilike("body", `%@${handle}%`)
       .order("created_at", { ascending: false })
       .limit(50),
     supabase
       .from("match_comments")
-      .select("id, match_id, user_id, body, created_at")
+      .select("id, pool_id, match_id, user_id, body, created_at")
+      .eq("pool_id", poolId)
       .ilike("body", `%@${handle}%`)
       .order("created_at", { ascending: false })
       .limit(50),
@@ -56,7 +62,7 @@ export async function getMentionLogs(profile: Profile): Promise<MentionLogItem[]
   const commentRows = ((matchComments ?? []) as MatchCommentRow[]).filter((comment) =>
     mentionRegex.test(comment.body),
   );
-  const clearedMentionKeys = await getClearedMentionKeys(profile.id);
+  const clearedMentionKeys = await getClearedMentionKeys(profile.id, poolId);
   const unreadChatRows = chatRows.filter(
     (message) => !clearedMentionKeys.has(getMentionKey("chat", message.id)),
   );
@@ -74,7 +80,7 @@ export async function getMentionLogs(profile: Profile): Promise<MentionLogItem[]
     new Set(unreadCommentRows.map((comment) => comment.match_id)),
   );
   const [authorsById, matchesById] = await Promise.all([
-    getProfilesById(authorIds),
+    getProfilesById(poolId, authorIds),
     getMatchesById(matchIds),
   ]);
 
@@ -116,22 +122,25 @@ export async function getMentionLogs(profile: Profile): Promise<MentionLogItem[]
 
 export async function clearMention({
   userId,
+  poolId,
   source,
   sourceId,
 }: {
   userId: string;
+  poolId: string;
   source: MentionSource;
   sourceId: string;
 }) {
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("mention_clears").upsert(
     {
+      pool_id: poolId,
       user_id: userId,
       source,
       source_id: sourceId,
     },
     {
-      onConflict: "user_id,source,source_id",
+      onConflict: "pool_id,user_id,source,source_id",
     },
   );
 
@@ -142,9 +151,11 @@ export async function clearMention({
 
 export async function clearMentions({
   userId,
+  poolId,
   mentions,
 }: {
   userId: string;
+  poolId: string;
   mentions: Pick<MentionLogItem, "source" | "id">[];
 }) {
   if (mentions.length === 0) {
@@ -154,12 +165,13 @@ export async function clearMentions({
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("mention_clears").upsert(
     mentions.map((mention) => ({
+      pool_id: poolId,
       user_id: userId,
       source: mention.source,
       source_id: mention.id,
     })),
     {
-      onConflict: "user_id,source,source_id",
+      onConflict: "pool_id,user_id,source,source_id",
     },
   );
 
@@ -168,11 +180,12 @@ export async function clearMentions({
   }
 }
 
-async function getClearedMentionKeys(userId: string) {
+async function getClearedMentionKeys(userId: string, poolId: string) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from("mention_clears")
     .select("source, source_id")
+    .eq("pool_id", poolId)
     .eq("user_id", userId);
 
   if (error) {
@@ -190,22 +203,18 @@ function getMentionKey(source: MentionSource, sourceId: string) {
   return `${source}:${sourceId}`;
 }
 
-async function getProfilesById(ids: string[]) {
+async function getProfilesById(poolId: string, ids: string[]) {
   const profilesById = new Map<string, Profile>();
 
   if (ids.length === 0) {
     return profilesById;
   }
 
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.from("profiles").select("*").in("id", ids);
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  ((data ?? []) as Profile[]).forEach((profile) => {
-    profilesById.set(profile.id, profile);
+  const profiles = await getPoolMemberProfiles(poolId);
+  profiles.forEach((profile) => {
+    if (ids.includes(profile.id)) {
+      profilesById.set(profile.id, profile);
+    }
   });
 
   return profilesById;

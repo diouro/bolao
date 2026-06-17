@@ -1,18 +1,10 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getPoolMemberProfiles } from "@/lib/pools/members";
 import type { MentionableUser, Profile } from "@/lib/types";
 
-export async function getMentionableUsers(): Promise<MentionableUser[]> {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("display_name", { ascending: true });
+export async function getMentionableUsers(poolId: string): Promise<MentionableUser[]> {
+  const profiles = await getPoolMemberProfiles(poolId);
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return ((data ?? []) as Profile[]).map((profile) => {
+  return profiles.map((profile) => {
     const label = profile.display_name || profile.email;
 
     return {

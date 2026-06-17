@@ -1,6 +1,5 @@
 import { MatchCard } from "@/components/match-card";
 import { Card } from "@/components/ui";
-import { requireProfile } from "@/lib/auth";
 import { getMatchCommentsForMatches } from "@/lib/comments";
 import { t, type Locale, type TranslationKey } from "@/lib/i18n";
 import {
@@ -9,6 +8,7 @@ import {
 } from "@/lib/matches";
 import { getPredictionLockMinutes } from "@/lib/predictions/settings";
 import { getMentionableUsers } from "@/lib/profiles";
+import { requireAppContext } from "@/lib/pools/context";
 import {
   getDefaultFixtureCategory,
   isKnockoutCategory,
@@ -39,7 +39,7 @@ export async function PredictionsFixture({
   groupParam?: string;
   locale: Locale;
 }) {
-  const profile = await requireProfile();
+  const { profile, poolId } = await requireAppContext();
   const matches = await getMatchesWithUserPredictions(profile.id);
   const lockMinutes = await getPredictionLockMinutes();
   const selectedCategory = groupParam
@@ -52,10 +52,12 @@ export async function PredictionsFixture({
           match.round === "group" && match.group_code === selectedCategory,
       );
   const commentsByMatch = await getMatchCommentsForMatches(
+    poolId,
     displayedMatches.map((match) => match.id),
   );
-  const mentionableUsers = await getMentionableUsers();
+  const mentionableUsers = await getMentionableUsers(poolId);
   const friendPredictionsByMatch = await getFriendPredictionsForMatches(
+    poolId,
     displayedMatches.map((match) => match.id),
   );
 

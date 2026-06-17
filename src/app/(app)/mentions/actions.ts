@@ -8,7 +8,7 @@ import {
   getMentionLogs,
   type MentionSource,
 } from "@/lib/mentions";
-import { requireProfile } from "@/lib/auth";
+import { requireAppContext } from "@/lib/pools/context";
 
 const clearMentionSchema = z.object({
   source: z.enum(["chat", "match_comment"]),
@@ -19,11 +19,12 @@ export async function clearSingleMention(input: {
   source: MentionSource;
   sourceId: string;
 }) {
-  const profile = await requireProfile();
+  const { profile, poolId } = await requireAppContext();
   const values = clearMentionSchema.parse(input);
 
   await clearMention({
     userId: profile.id,
+    poolId,
     source: values.source,
     sourceId: values.sourceId,
   });
@@ -32,11 +33,12 @@ export async function clearSingleMention(input: {
 }
 
 export async function clearAllMentions() {
-  const profile = await requireProfile();
-  const mentions = await getMentionLogs(profile);
+  const { profile, poolId } = await requireAppContext();
+  const mentions = await getMentionLogs(profile, poolId);
 
   await clearMentions({
     userId: profile.id,
+    poolId,
     mentions,
   });
 

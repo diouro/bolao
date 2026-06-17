@@ -1,12 +1,13 @@
 import { calculatePoints } from "@/lib/scoring/calculate-points";
+import { getPoolMemberProfiles } from "@/lib/pools/members";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { Match, Prediction, Profile } from "@/lib/types";
+import type { Match, PoolMemberProfile, Prediction } from "@/lib/types";
 
 export const ENTRY_PRICE_DOLLARS = 5;
 
 export type LeaderboardRow = {
   rank: number;
-  profile: Profile;
+  profile: PoolMemberProfile;
   totalPoints: number;
   exactHits: number;
   resultHits: number;
@@ -19,21 +20,17 @@ export type Leaderboard = {
   prizePoolDollars: number;
 };
 
-export async function getLeaderboard(): Promise<Leaderboard> {
+export async function getLeaderboard(poolId: string): Promise<Leaderboard> {
   const supabase = await createSupabaseServerClient();
   const [
-    { data: profiles, error: profilesError },
+    profiles,
     { data: matches, error: matchesError },
     { data: predictions, error: predictionsError },
   ] = await Promise.all([
-    supabase.from("profiles").select("*").order("created_at", { ascending: true }),
+    getPoolMemberProfiles(poolId),
     supabase.from("matches").select("*").eq("status", "finished"),
     supabase.from("predictions").select("*"),
   ]);
-
-  if (profilesError) {
-    throw new Error(profilesError.message);
-  }
 
   if (matchesError) {
     throw new Error(matchesError.message);
@@ -43,13 +40,17 @@ export async function getLeaderboard(): Promise<Leaderboard> {
     throw new Error(predictionsError.message);
   }
 
+  const memberIds = new Set(profiles.map((profile) => profile.id));
   const matchMap = new Map(
     ((matches ?? []) as Match[]).map((match) => [match.id, match]),
   );
 
-  const rows = ((profiles ?? []) as Profile[]).map((profile) => {
+  const rows = profiles.map((profile) => {
     const userPredictions = ((predictions ?? []) as Prediction[]).filter(
-      (prediction) => prediction.user_id === profile.id && matchMap.has(prediction.match_id),
+      (prediction) =>
+        prediction.user_id === profile.id &&
+        memberIds.has(prediction.user_id) &&
+        matchMap.has(prediction.match_id),
     );
 
     const totals = userPredictions.reduce(
@@ -96,8 +97,8 @@ export async function getLeaderboard(): Promise<Leaderboard> {
     }
 
     return (
-      new Date(a.profile.created_at).getTime() -
-      new Date(b.profile.created_at).getTime()
+      new Date(a.profile.pool_joined_at).getTime() -
+      new Date(b.profile.pool_joined_at).getTime()
     );
   });
 
@@ -105,7 +106,7 @@ export async function getLeaderboard(): Promise<Leaderboard> {
     ...row,
     rank: index + 1,
   })) satisfies LeaderboardRow[];
-  const paidPlayers = ((profiles ?? []) as Profile[]).filter((profile) => profile.has_paid).length;
+  const paidPlayers = profiles.filter((profile) => profile.has_paid).length;
 
   return {
     rows: rankedRows,

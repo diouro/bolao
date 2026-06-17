@@ -1,10 +1,10 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getPoolMemberIds, getPoolMemberProfiles } from "@/lib/pools/members";
 import type {
   Match,
   MatchFriendPrediction,
   MatchWithPrediction,
   Prediction,
-  Profile,
 } from "@/lib/types";
 
 export const MATCH_FRIEND_PREDICTIONS_LIMIT = 50;
@@ -64,6 +64,7 @@ export async function getAllPredictions() {
 }
 
 export async function getFriendPredictionsForMatches(
+  poolId: string,
   matchIds: string[],
   perMatchLimit = MATCH_FRIEND_PREDICTIONS_LIMIT,
 ) {
@@ -73,11 +74,18 @@ export async function getFriendPredictionsForMatches(
     return predictionsByMatch;
   }
 
+  const memberIds = await getPoolMemberIds(poolId);
+
+  if (memberIds.length === 0) {
+    return predictionsByMatch;
+  }
+
   const supabase = await createSupabaseServerClient();
   const { data: predictions, error } = await supabase
     .from("predictions")
     .select("*")
     .in("match_id", matchIds)
+    .in("user_id", memberIds)
     .order("updated_at", { ascending: false })
     .limit(matchIds.length * perMatchLimit);
 
@@ -86,23 +94,8 @@ export async function getFriendPredictionsForMatches(
   }
 
   const rows = (predictions ?? []) as Prediction[];
-  const userIds = Array.from(new Set(rows.map((prediction) => prediction.user_id)));
-  const profilesById = new Map<string, Profile>();
-
-  if (userIds.length > 0) {
-    const { data: profiles, error: profilesError } = await supabase
-      .from("profiles")
-      .select("*")
-      .in("id", userIds);
-
-    if (profilesError) {
-      throw new Error(profilesError.message);
-    }
-
-    ((profiles ?? []) as Profile[]).forEach((profile) => {
-      profilesById.set(profile.id, profile);
-    });
-  }
+  const profiles = await getPoolMemberProfiles(poolId);
+  const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
 
   for (const prediction of rows) {
     const existing = predictionsByMatch.get(prediction.match_id) ?? [];

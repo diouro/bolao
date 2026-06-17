@@ -8,12 +8,15 @@ import {
   getPointsBreakdown,
 } from "@/lib/points-breakdown";
 
+import { requireAppContext } from "@/lib/pools/context";
+
 export const dynamic = "force-dynamic";
 
 export default async function BreakdownPage() {
+  const { poolId } = await requireAppContext();
   const locale = await getLocale();
   const intlLocale = getIntlLocale(locale);
-  const breakdown = await getPointsBreakdown();
+  const breakdown = await getPointsBreakdown(poolId);
   const finishedMatches = breakdown.matches.length;
   const todayKey = getAppDateKey(new Date());
   const scrollToMatchId = getBreakdownScrollTargetMatchId(

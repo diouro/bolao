@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getOlderChatMessages } from "@/lib/chat";
-import { requireUser } from "@/lib/auth";
+import { requireAppContext } from "@/lib/pools/context";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const olderMessagesSchema = z.object({
@@ -11,24 +11,26 @@ const olderMessagesSchema = z.object({
 });
 
 export async function loadOlderChatMessages(input: { before: string }) {
-  await requireUser();
+  const { poolId } = await requireAppContext();
   const values = olderMessagesSchema.parse(input);
 
   return getOlderChatMessages({
+    poolId,
     before: values.before,
   });
 }
 
 export async function markChatRead() {
-  const user = await requireUser();
+  const { profile, poolId } = await requireAppContext();
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("chat_reads").upsert(
     {
-      user_id: user.id,
+      pool_id: poolId,
+      user_id: profile.id,
       last_read_at: new Date().toISOString(),
     },
     {
-      onConflict: "user_id",
+      onConflict: "pool_id,user_id",
     },
   );
 

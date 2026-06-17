@@ -30,12 +30,14 @@ type ActiveMention = {
 export function ChatRoom({
   initialMessages,
   currentUserId,
+  poolId,
   mentionableUsers,
   appTimeZone,
   locale,
 }: {
   initialMessages: ChatMessageWithAuthor[];
   currentUserId: string;
+  poolId: string;
   mentionableUsers: MentionableUser[];
   appTimeZone: string;
   locale: Locale;
@@ -90,30 +92,56 @@ export function ChatRoom({
       .slice(0, 8);
   }, [activeMention, currentUserId, mentionableUsers]);
 
+  const mentionableUsersById = useMemo(
+    () => new Map(mentionableUsers.map((user) => [user.id, user])),
+    [mentionableUsers],
+  );
+
   const hydrateMessages = useCallback(
     async (rawMessages: ChatMessage[]) => {
       if (rawMessages.length === 0) {
         return [];
       }
 
-      const userIds = Array.from(
-        new Set(rawMessages.map((message) => message.user_id)),
+      const missingUserIds = Array.from(
+        new Set(
+          rawMessages
+            .map((message) => message.user_id)
+            .filter((userId) => !mentionableUsersById.has(userId)),
+        ),
       );
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, display_name, email, has_paid")
-        .in("id", userIds);
-
-      if (profilesError) {
-        throw new Error(profilesError.message);
-      }
 
       const profilesById = new Map(
-        ((profiles ?? []) as Pick<
-          Profile,
-          "id" | "display_name" | "email" | "has_paid"
-        >[]).map((profile) => [profile.id, profile]),
+        mentionableUsers.map((user) => [
+          user.id,
+          {
+            display_name: user.label,
+            email: user.email,
+            has_paid: user.has_paid,
+          },
+        ]),
       );
+
+      if (missingUserIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, display_name, email")
+          .in("id", missingUserIds);
+
+        if (profilesError) {
+          throw new Error(profilesError.message);
+        }
+
+        ((profiles ?? []) as Pick<Profile, "id" | "display_name" | "email">[]).forEach(
+          (profile) => {
+            profilesById.set(profile.id, {
+              display_name: profile.display_name ?? profile.email,
+              email: profile.email,
+              has_paid: false,
+            });
+          },
+        );
+      }
 
       return rawMessages.map((message) => {
         const profile = profilesById.get(message.user_id);
@@ -126,7 +154,7 @@ export function ChatRoom({
         };
       });
     },
-    [supabase],
+    [mentionableUsers, mentionableUsersById, supabase],
   );
 
   const mergeMessages = useCallback((incoming: ChatMessageWithAuthor[]) => {
@@ -149,6 +177,7 @@ export function ChatRoom({
     const query = supabase
       .from("chat_messages")
       .select("*")
+      .eq("pool_id", poolId)
       .order("created_at", { ascending: true })
       .limit(CHAT_MESSAGES_PAGE_SIZE);
 
@@ -162,7 +191,7 @@ export function ChatRoom({
     }
 
     mergeMessages(await hydrateMessages((data ?? []) as ChatMessage[]));
-  }, [hydrateMessages, mergeMessages, messages, supabase]);
+  }, [hydrateMessages, mergeMessages, messages, poolId, supabase]);
 
   const loadOlder = useCallback(async () => {
     const oldest = messages[0];
@@ -214,6 +243,7 @@ export function ChatRoom({
     shouldStickToBottomRef.current = true;
 
     const { error: insertError } = await supabase.from("chat_messages").insert({
+      pool_id: poolId,
       user_id: currentUserId,
       body: trimmed,
     });
@@ -254,7 +284,7 @@ export function ChatRoom({
 
   useEffect(() => {
     const channel = supabase
-      .channel("chat-room", {
+      .channel(`chat-room-${poolId}`, {
         config: {
           presence: {
             key: currentUserId,
@@ -267,6 +297,7 @@ export function ChatRoom({
           event: "INSERT",
           schema: "public",
           table: "chat_messages",
+          filter: `pool_id=eq.${poolId}`,
         },
         async (payload) => {
           try {
@@ -299,7 +330,7 @@ export function ChatRoom({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId, hydrateMessages, mergeMessages, supabase]);
+  }, [currentUserId, hydrateMessages, mergeMessages, poolId, supabase]);
 
   useEffect(() => {
     if (realtimeStatus === "live") {

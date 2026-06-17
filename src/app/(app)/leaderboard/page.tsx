@@ -1,16 +1,16 @@
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { Card } from "@/components/ui";
-import { requireProfile } from "@/lib/auth";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { getLeaderboard } from "@/lib/leaderboard";
+import { requireAppContext } from "@/lib/pools/context";
 
 export const dynamic = "force-dynamic";
 
 export default async function LeaderboardPage() {
-  const profile = await requireProfile();
+  const { profile, poolId } = await requireAppContext();
   const locale = await getLocale();
-  const leaderboard = await getLeaderboard();
+  const leaderboard = await getLeaderboard(poolId);
   const { rows, paidPlayers, prizePoolDollars } = leaderboard;
   const current = rows.find((row) => row.profile.id === profile.id);
 

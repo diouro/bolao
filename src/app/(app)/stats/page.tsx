@@ -1,15 +1,15 @@
 import { StatsCards } from "@/components/stats-cards";
-import { requireProfile } from "@/lib/auth";
 import { t } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
+import { requireAppContext } from "@/lib/pools/context";
 import { computeStats } from "@/lib/stats/compute-stats";
 
 export const dynamic = "force-dynamic";
 
 export default async function StatsPage() {
-  const profile = await requireProfile();
+  const { profile, poolId } = await requireAppContext();
   const locale = await getLocale();
-  const summary = await computeStats(profile.id);
+  const summary = await computeStats(profile.id, poolId);
 
   return (
     <>

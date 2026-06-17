@@ -6,21 +6,25 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 type MentionPayload = {
   id?: string;
   body?: string;
+  pool_id?: string;
 };
 
 type ClearPayload = {
   source?: string;
   source_id?: string;
+  pool_id?: string;
 };
 
 export function MentionNavBadge({
   initialCount,
   handle,
   currentUserId,
+  poolId,
 }: {
   initialCount: number;
   handle: string;
   currentUserId: string;
+  poolId: string;
 }) {
   const [count, setCount] = useState(initialCount);
   const seenIds = useRef(new Set<string>());
@@ -57,13 +61,14 @@ export function MentionNavBadge({
     }
 
     const channel = supabase
-      .channel(`mentions-badge-${currentUserId}`)
+      .channel(`mentions-badge-${poolId}-${currentUserId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "chat_messages",
+          filter: `pool_id=eq.${poolId}`,
         },
         (payload) => maybeIncrement("chat", payload.new as MentionPayload),
       )
@@ -73,6 +78,7 @@ export function MentionNavBadge({
           event: "INSERT",
           schema: "public",
           table: "match_comments",
+          filter: `pool_id=eq.${poolId}`,
         },
         (payload) =>
           maybeIncrement("match_comment", payload.new as MentionPayload),
@@ -83,7 +89,7 @@ export function MentionNavBadge({
           event: "INSERT",
           schema: "public",
           table: "mention_clears",
-          filter: `user_id=eq.${currentUserId}`,
+          filter: `pool_id=eq.${poolId},user_id=eq.${currentUserId}`,
         },
         (payload) => maybeDecrement(payload.new as ClearPayload),
       )
@@ -92,7 +98,7 @@ export function MentionNavBadge({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUserId, handle]);
+  }, [currentUserId, handle, poolId]);
 
   if (count <= 0) {
     return null;

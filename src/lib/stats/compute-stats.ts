@@ -1,9 +1,10 @@
 import { calculatePoints } from "@/lib/scoring/calculate-points";
+import { getPoolMemberProfiles } from "@/lib/pools/members";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { Match, Prediction, Profile, TournamentRound } from "@/lib/types";
+import type { Match, Prediction, PoolMemberProfile, TournamentRound } from "@/lib/types";
 
 export type UserStats = {
-  profile: Profile;
+  profile: PoolMemberProfile;
   predictions: number;
   exactHits: number;
   resultHits: number;
@@ -25,14 +26,17 @@ export type StatsSummary = {
   boldest: UserStats | null;
 };
 
-export async function computeStats(currentUserId: string): Promise<StatsSummary> {
+export async function computeStats(
+  currentUserId: string,
+  poolId: string,
+): Promise<StatsSummary> {
   const supabase = await createSupabaseServerClient();
   const [
-    { data: profiles, error: profilesError },
+    profiles,
     { data: matches, error: matchesError },
     { data: predictions, error: predictionsError },
   ] = await Promise.all([
-    supabase.from("profiles").select("*"),
+    getPoolMemberProfiles(poolId),
     supabase
       .from("matches")
       .select("*")
@@ -40,10 +44,6 @@ export async function computeStats(currentUserId: string): Promise<StatsSummary>
       .order("kickoff_at", { ascending: true }),
     supabase.from("predictions").select("*"),
   ]);
-
-  if (profilesError) {
-    throw new Error(profilesError.message);
-  }
 
   if (matchesError) {
     throw new Error(matchesError.message);
@@ -53,11 +53,14 @@ export async function computeStats(currentUserId: string): Promise<StatsSummary>
     throw new Error(predictionsError.message);
   }
 
+  const memberIds = new Set(profiles.map((profile) => profile.id));
   const finishedMatches = (matches ?? []) as Match[];
   const matchMap = new Map(finishedMatches.map((match) => [match.id, match]));
 
-  const allPredictions = (predictions ?? []) as Prediction[];
-  const users = ((profiles ?? []) as Profile[]).map((profile) =>
+  const allPredictions = ((predictions ?? []) as Prediction[]).filter((prediction) =>
+    memberIds.has(prediction.user_id),
+  );
+  const users = profiles.map((profile) =>
     computeUserStats({
       profile,
       matches: finishedMatches,
@@ -84,7 +87,7 @@ function computeUserStats({
   predictions,
   allPredictions,
 }: {
-  profile: Profile;
+  profile: PoolMemberProfile;
   matches: Match[];
   predictions: Prediction[];
   allPredictions: Prediction[];

@@ -19,6 +19,7 @@
     "db:local:stop": "npx supabase stop",
     "db:local:status": "npx supabase status",
     "db:local:reset": "npx supabase db reset",
+    "db:local:reimport": "SKIP_DUMP=1 bash scripts/db-clone-prod.sh",
     "db:local:env": "bash scripts/db-local-env.sh",
     "db:local:env:write": "bash scripts/db-local-env.sh .env.local.multipool",
     "db:local:clone": "bash scripts/db-clone-prod.sh"

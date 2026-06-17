@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireUser } from "@/lib/auth";
+import { requireAppContext } from "@/lib/pools/context";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const commentSchema = z.object({
@@ -11,7 +11,7 @@ const commentSchema = z.object({
 });
 
 export async function addMatchComment(formData: FormData) {
-  const user = await requireUser();
+  const { profile, poolId } = await requireAppContext();
   const values = commentSchema.parse({
     matchId: formData.get("matchId"),
     body: formData.get("body"),
@@ -19,8 +19,9 @@ export async function addMatchComment(formData: FormData) {
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from("match_comments").insert({
+    pool_id: poolId,
     match_id: values.matchId,
-    user_id: user.id,
+    user_id: profile.id,
     body: values.body,
   });
 

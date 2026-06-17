@@ -1,10 +1,12 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getPoolMemberProfiles } from "@/lib/pools/members";
 import type { MatchComment, Profile } from "@/lib/types";
 
 export const MATCH_COMMENTS_LIMIT = 25;
 
 type CommentRow = {
   id: string;
+  pool_id: string;
   match_id: string;
   user_id: string;
   body: string;
@@ -12,6 +14,7 @@ type CommentRow = {
 };
 
 export async function getMatchCommentsForMatches(
+  poolId: string,
   matchIds: string[],
   perMatchLimit = MATCH_COMMENTS_LIMIT,
 ) {
@@ -24,7 +27,8 @@ export async function getMatchCommentsForMatches(
   const supabase = await createSupabaseServerClient();
   const { data: comments, error } = await supabase
     .from("match_comments")
-    .select("id, match_id, user_id, body, created_at")
+    .select("id, pool_id, match_id, user_id, body, created_at")
+    .eq("pool_id", poolId)
     .in("match_id", matchIds)
     .order("created_at", { ascending: false })
     .limit(matchIds.length * perMatchLimit);
@@ -34,23 +38,8 @@ export async function getMatchCommentsForMatches(
   }
 
   const rows = (comments ?? []) as CommentRow[];
-  const userIds = Array.from(new Set(rows.map((comment) => comment.user_id)));
-  const profilesById = new Map<string, Profile>();
-
-  if (userIds.length > 0) {
-    const { data: profiles, error: profilesError } = await supabase
-      .from("profiles")
-      .select("*")
-      .in("id", userIds);
-
-    if (profilesError) {
-      throw new Error(profilesError.message);
-    }
-
-    ((profiles ?? []) as Profile[]).forEach((profile) => {
-      profilesById.set(profile.id, profile);
-    });
-  }
+  const profiles = await getPoolMemberProfiles(poolId);
+  const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
 
   for (const comment of rows) {
     const existing = commentsByMatch.get(comment.match_id) ?? [];

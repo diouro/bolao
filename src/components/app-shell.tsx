@@ -18,12 +18,13 @@ import { ChatNavBadge } from "@/components/chat-nav-badge";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { MentionNavBadge } from "@/components/mention-nav-badge";
 import { MobileNavLink, NavLink } from "@/components/nav-link";
+import { PoolSwitcher } from "@/components/pool-switcher";
 import { getUnreadChatMessageCount } from "@/lib/chat";
 import { t, type TranslationKey } from "@/lib/i18n";
 import { getLocale } from "@/lib/i18n-server";
 import { getMentionLogs } from "@/lib/mentions";
 import { getMentionHandle } from "@/lib/profiles";
-import type { Profile } from "@/lib/types";
+import type { Pool, PoolMembership, Profile } from "@/lib/types";
 
 const navItems = [
   { key: "dashboard", labelKey: "app.dashboard", href: "/dashboard", icon: ListChecks },
@@ -41,15 +42,23 @@ const mobileNavItems = navItems.filter((item) => item.key !== "mentions");
 
 export async function AppShell({
   profile,
+  pool,
+  poolId,
+  membership,
+  memberships,
   children,
 }: {
   profile: Profile;
+  pool: Pool;
+  poolId: string;
+  membership: PoolMembership;
+  memberships: PoolMembership[];
   children: ReactNode;
 }) {
   const locale = await getLocale();
   const [mentionCount, chatUnreadCount] = await Promise.all([
-    getMentionLogs(profile).then((logs) => logs.length),
-    getUnreadChatMessageCount(profile.id),
+    getMentionLogs(profile, poolId).then((logs) => logs.length),
+    getUnreadChatMessageCount(poolId, profile.id),
   ]);
   const mentionHandle = getMentionHandle(profile);
 
@@ -69,6 +78,11 @@ export async function AppShell({
             </div>
           </div>
         </div>
+        <PoolSwitcher
+          memberships={memberships}
+          currentSlug={pool.slug}
+          locale={locale}
+        />
         <nav className="flex-1 space-y-1 overflow-y-auto p-4">
           {navItems.map((item) => (
             <NavItem
@@ -81,6 +95,7 @@ export async function AppShell({
                     key={`chat-desktop-${chatUnreadCount}`}
                     initialCount={chatUnreadCount}
                     currentUserId={profile.id}
+                    poolId={poolId}
                     channelKey="desktop"
                     className="ml-auto"
                   />
@@ -89,6 +104,7 @@ export async function AppShell({
                     initialCount={mentionCount}
                     handle={mentionHandle}
                     currentUserId={profile.id}
+                    poolId={poolId}
                   />
                 ) : null
               }
@@ -126,7 +142,7 @@ export async function AppShell({
             <p className="min-w-0 truncate text-sm font-semibold text-zinc-950">
               {profile.display_name ?? profile.email}
             </p>
-            {profile.has_paid && <PaidBadge />}
+            {membership.has_paid && <PaidBadge />}
           </div>
           <p className="truncate text-xs text-zinc-500">{profile.email}</p>
           <form action={logout} className="mt-4">
@@ -152,7 +168,7 @@ export async function AppShell({
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-black text-zinc-950">Bolão</p>
-                  {profile.has_paid && <PaidBadge />}
+                  {membership.has_paid && <PaidBadge />}
                 </div>
                 <p className="truncate text-xs text-zinc-500">{profile.email}</p>
               </div>
@@ -191,6 +207,7 @@ export async function AppShell({
                   key={`chat-mobile-${chatUnreadCount}`}
                   initialCount={chatUnreadCount}
                   currentUserId={profile.id}
+                  poolId={poolId}
                   channelKey="mobile"
                   className="absolute -right-3 -top-2 min-w-5 border-2 border-white px-1.5 py-0 text-[10px]"
                 />

@@ -1,6 +1,5 @@
 import { MatchCard } from "@/components/match-card";
 import { Card } from "@/components/ui";
-import { requireProfile } from "@/lib/auth";
 import { getMatchCommentsForMatches } from "@/lib/comments";
 import {
   getDashboardMatchPhase,
@@ -16,11 +15,12 @@ import {
 import { isPredictionEditable } from "@/lib/predictions/lock";
 import { getPredictionLockMinutes } from "@/lib/predictions/settings";
 import { getMentionableUsers } from "@/lib/profiles";
+import { requireAppContext } from "@/lib/pools/context";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const profile = await requireProfile();
+  const { profile, poolId } = await requireAppContext();
   const locale = await getLocale();
   const matches = await getMatchesWithUserPredictions(profile.id);
   const lockMinutes = await getPredictionLockMinutes();
@@ -37,11 +37,13 @@ export default async function DashboardPage() {
     })
   );
   const commentsByMatch = await getMatchCommentsForMatches(
-    upcoming.map((match) => match.id)
+    poolId,
+    upcoming.map((match) => match.id),
   );
-  const mentionableUsers = await getMentionableUsers();
+  const mentionableUsers = await getMentionableUsers(poolId);
   const friendPredictionsByMatch = await getFriendPredictionsForMatches(
-    upcoming.map((match) => match.id)
+    poolId,
+    upcoming.map((match) => match.id),
   );
   const missingPicks = editableMatches.filter((match) => !match.prediction).length;
   const picksMade = upcoming.filter((match) => match.prediction).length;

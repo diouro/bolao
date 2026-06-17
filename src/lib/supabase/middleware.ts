@@ -15,6 +15,7 @@ const protectedPrefixes = [
   "/chat",
   "/mentions",
   "/stats",
+  "/pools",
   "/admin",
 ];
 
