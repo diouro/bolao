@@ -1,10 +1,6 @@
 import { getAppDateKey } from "@/lib/dates";
 import type { MatchStatus } from "@/lib/types";
 
-type MatchWithKickoff = {
-  kickoff_at: string;
-};
-
 export type DashboardMatchPhase = "live" | "upcoming" | "finished";
 
 const dashboardPhaseRank: Record<DashboardMatchPhase, number> = {
@@ -48,25 +44,52 @@ export function sortDashboardMatches<
   });
 }
 
+type MatchForMatchDay = {
+  kickoff_at: string;
+  status?: MatchStatus;
+};
+
 export function getNextMatchDayKey(
-  matches: MatchWithKickoff[],
+  matches: MatchForMatchDay[],
   now = new Date(),
 ) {
   const todayKey = getAppDateKey(now);
-  const sorted = [...matches].sort((a, b) =>
-    a.kickoff_at.localeCompare(b.kickoff_at),
-  );
-  const anchor = sorted.find(
-    (match) => getAppDateKey(match.kickoff_at) >= todayKey,
-  );
+  const dateKeys = [
+    ...new Set(matches.map((match) => getAppDateKey(match.kickoff_at))),
+  ].sort();
 
-  return anchor ? getAppDateKey(anchor.kickoff_at) : null;
+  if (dateKeys.length === 0) {
+    return null;
+  }
+
+  const candidateKeys = dateKeys.filter((dateKey) => dateKey >= todayKey);
+  const keysToCheck =
+    candidateKeys.length > 0 ? candidateKeys : [dateKeys[dateKeys.length - 1]!];
+
+  for (const dateKey of keysToCheck) {
+    const dayMatches = matches.filter(
+      (match) => getAppDateKey(match.kickoff_at) === dateKey,
+    );
+
+    if (!isMatchDayComplete(dayMatches)) {
+      return dateKey;
+    }
+  }
+
+  return keysToCheck[keysToCheck.length - 1] ?? null;
 }
 
-export function getMatchesForNextMatchDay<T extends MatchWithKickoff>(
-  matches: T[],
-  now = new Date(),
-): T[] {
+function isMatchDayComplete(dayMatches: MatchForMatchDay[]) {
+  if (dayMatches.length === 0) {
+    return true;
+  }
+
+  return dayMatches.every((match) => match.status === "finished");
+}
+
+export function getMatchesForNextMatchDay<
+  T extends MatchForMatchDay,
+>(matches: T[], now = new Date()): T[] {
   const matchDay = getNextMatchDayKey(matches, now);
 
   if (!matchDay) {
