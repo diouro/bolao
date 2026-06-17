@@ -13,8 +13,18 @@ import type { Match } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminResultsPage() {
+export default async function AdminResultsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    syncUpdated?: string;
+    syncChecked?: string;
+    syncSkipped?: string;
+    syncError?: string;
+  }>;
+}) {
   await requireAdmin();
+  const params = await searchParams;
   const locale = await getLocale();
   const matches = await getAllMatches();
   const nowMs = new Date().getTime();
@@ -44,6 +54,14 @@ export default async function AdminResultsPage() {
         </form>
       </div>
 
+      <SyncFeedback
+        locale={locale}
+        updated={params.syncUpdated}
+        checked={params.syncChecked}
+        skipped={params.syncSkipped}
+        error={params.syncError}
+      />
+
       <div className="grid gap-4">
         {matchesToShow.length > 0 ? (
           matchesToShow.map((match) => (
@@ -59,6 +77,45 @@ export default async function AdminResultsPage() {
         )}
       </div>
     </>
+  );
+}
+
+function SyncFeedback({
+  locale,
+  updated,
+  checked,
+  skipped,
+  error,
+}: {
+  locale: Locale;
+  updated?: string;
+  checked?: string;
+  skipped?: string;
+  error?: string;
+}) {
+  if (error) {
+    return (
+      <Card className="mb-4 border-red-200 bg-red-50">
+        <p className="font-semibold text-red-800">{t(locale, "admin.syncError")}</p>
+        <p className="mt-2 text-sm text-red-700">{error}</p>
+      </Card>
+    );
+  }
+
+  if (updated === undefined || checked === undefined || skipped === undefined) {
+    return null;
+  }
+
+  return (
+    <Card className="mb-4 border-emerald-200 bg-emerald-50">
+      <p className="font-semibold text-emerald-900">
+        {t(locale, "admin.syncSuccess", {
+          updated,
+          checked,
+          skipped,
+        })}
+      </p>
+    </Card>
   );
 }
 

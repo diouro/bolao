@@ -25,3 +25,24 @@ export function formatAppDateTime(value: string | Date) {
     minute: "2-digit",
   }).format(new Date(value));
 }
+
+export function formatAppDateHeader(
+  value: string | Date,
+  intlLocale = "en",
+) {
+  return new Intl.DateTimeFormat(intlLocale, {
+    timeZone: getAppTimeZone(),
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+export function formatAppTime(value: string | Date, intlLocale = "en") {
+  return new Intl.DateTimeFormat(intlLocale, {
+    timeZone: getAppTimeZone(),
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(value));
+}

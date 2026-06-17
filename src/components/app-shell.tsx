@@ -2,7 +2,9 @@ import type { ReactNode } from "react";
 import {
   BarChart3,
   Bell,
+  CalendarDays,
   Check,
+  GitBranch,
   ListChecks,
   LogOut,
   MessageCircle,
@@ -25,6 +27,8 @@ import type { Profile } from "@/lib/types";
 const navItems = [
   { key: "dashboard", labelKey: "app.dashboard", href: "/dashboard", icon: ListChecks },
   { key: "predictions", labelKey: "app.predictions", href: "/predictions", icon: Trophy },
+  { key: "schedule", labelKey: "app.schedule", href: "/schedule", icon: CalendarDays },
+  { key: "bracket", labelKey: "app.bracket", href: "/bracket", icon: GitBranch },
   { key: "leaderboard", labelKey: "app.leaderboard", href: "/leaderboard", icon: BarChart3 },
   { key: "breakdown", labelKey: "app.breakdown", href: "/breakdown", icon: ListChecks },
   { key: "chat", labelKey: "app.chat", href: "/chat", icon: MessageCircle },
@@ -159,9 +163,13 @@ export async function AppShell({
         </div>
       </section>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-zinc-200 bg-white lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex overflow-x-auto border-t border-zinc-200 bg-white lg:hidden">
         {mobileNavItems.map((item) => (
-          <MobileNavLink key={item.key} href={item.href}>
+          <MobileNavLink
+            key={item.key}
+            href={item.href}
+            className="min-w-[5.5rem] shrink-0 px-2"
+          >
             <span className="relative">
               <item.icon className="h-4 w-4" />
               {item.key === "chat" && (

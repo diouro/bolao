@@ -2,7 +2,7 @@ import {
   getFootballDataApiToken,
   getFootballDataSeason,
 } from "@/lib/env";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { Match } from "@/lib/types";
 import type {
   MatchResult,
@@ -35,7 +35,7 @@ type FootballDataMatch = {
 
 export class FootballDataResultsProvider implements ResultsProvider {
   async getMatchResult(matchId: string): Promise<MatchResult | null> {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseAdminClient();
     const { data: match, error } = await supabase
       .from("matches")
       .select("id, external_match_id")
@@ -66,7 +66,7 @@ export class FootballDataResultsProvider implements ResultsProvider {
 
   async syncFinishedMatches(): Promise<SyncResultsSummary> {
     const remoteMatches = await this.fetchFinishedMatches();
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseAdminClient();
     const { data: localMatches, error } = await supabase
       .from("matches")
       .select("*")
@@ -94,7 +94,7 @@ export class FootballDataResultsProvider implements ResultsProvider {
         continue;
       }
 
-      const { error: updateError } = await supabase
+      const { data: updatedMatch, error: updateError } = await supabase
         .from("matches")
         .update({
           home_score: result.homeScore,
@@ -109,10 +109,17 @@ export class FootballDataResultsProvider implements ResultsProvider {
           home_team_name: remoteMatch.homeTeam.name ?? null,
           away_team_name: remoteMatch.awayTeam.name ?? null,
         })
-        .eq("id", localMatch.id);
+        .eq("id", localMatch.id)
+        .select("id")
+        .maybeSingle();
 
       if (updateError) {
         throw new Error(updateError.message);
+      }
+
+      if (!updatedMatch) {
+        skipped += 1;
+        continue;
       }
 
       updated += 1;
@@ -156,9 +163,7 @@ export class FootballDataResultsProvider implements ResultsProvider {
       headers: {
         "X-Auth-Token": token,
       },
-      next: {
-        revalidate: 60,
-      },
+      cache: "no-store",
     });
 
     if (!response.ok) {
@@ -174,7 +179,11 @@ function extractFinalScore(match: FootballDataMatch) {
   const homeScore = match.score?.fullTime?.home;
   const awayScore = match.score?.fullTime?.away;
 
-  if (match.status !== "FINISHED" || homeScore === null || awayScore === null) {
+  if (
+    match.status !== "FINISHED" ||
+    homeScore == null ||
+    awayScore == null
+  ) {
     return null;
   }
 

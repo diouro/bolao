@@ -43,6 +43,13 @@ Set:
 - `FOOTBALL_DATA_API_TOKEN`
 - `FOOTBALL_DATA_SEASON=2026`
 
+For Vercel production, set these server environment variables in the project
+settings, or sync them from `.env.production` with:
+
+```bash
+npm run vercel:env:prod
+```
+
 The first matching `BOOTSTRAP_ADMIN_EMAIL` user is promoted to admin when they
 sign in. Admins can enter final match results at `/admin/results`.
 
