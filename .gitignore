@@ -32,6 +32,11 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+!env.multipool.example
+
+# local supabase dumps (may contain production data)
+/dumps/*.sql
 
 # vercel
 .vercel

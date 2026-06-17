@@ -1,0 +1,13 @@
+---
+description: Always localize user-facing copy in the Bolão app
+alwaysApply: true
+---
+
+# Localization
+
+- Always localize new user-facing UI copy.
+- Use the existing i18n helpers in `web/src/lib/i18n.ts` and `web/src/lib/i18n-server.ts`.
+- Add both English (`en`) and Portuguese (`pt`) strings for any new translation key.
+- Prefer passing the current `locale` into shared components instead of hardcoding English text.
+- Keep dynamic text using `t(locale, "key", { value })` placeholders rather than string concatenation when the sentence structure may differ by language.
+- Do not add new hardcoded labels, button text, empty states, headings, placeholders, or aria labels without considering localization.

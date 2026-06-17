@@ -14,7 +14,14 @@
     "deploy:vercel:prod": "bash scripts/deploy-vercel.sh --prod --migrate",
     "deploy:vercel:prod:full": "bash scripts/deploy-vercel.sh --prod --sync-env --migrate",
     "vercel:env:prod": "bash scripts/deploy-vercel.sh --prod --env-only",
-    "vercel:migrate:prod": "bash scripts/deploy-vercel.sh --prod --migrate-only"
+    "vercel:migrate:prod": "bash scripts/deploy-vercel.sh --prod --migrate-only",
+    "db:local:start": "bash scripts/db-local-start.sh",
+    "db:local:stop": "npx supabase stop",
+    "db:local:status": "npx supabase status",
+    "db:local:reset": "npx supabase db reset",
+    "db:local:env": "bash scripts/db-local-env.sh",
+    "db:local:env:write": "bash scripts/db-local-env.sh .env.local.multipool",
+    "db:local:clone": "bash scripts/db-clone-prod.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

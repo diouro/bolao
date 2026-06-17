@@ -69,6 +69,42 @@ not require a globally installed Supabase CLI or a linked local project.
 You can also run the SQL manually from `supabase/migrations` in the Supabase SQL
 Editor, then run `npm run seed:fixtures`.
 
+## Local Supabase (multi-pool development)
+
+Run a full Supabase stack locally with Docker — no paid cloud project needed.
+Production stays untouched.
+
+**Prerequisites:** Docker Desktop running.
+
+```bash
+npm run db:local:start          # start containers + apply migrations
+npm run db:local:env:write      # write .env.local.multipool with local keys
+cp .env.local.multipool .env.local
+npm run dev
+```
+
+Optional — copy production data into the local database:
+
+```bash
+npm run db:local:clone          # reads POSTGRES_URL_NON_POOLING from .env.production
+```
+
+Other commands:
+
+```bash
+npm run db:local:status         # URLs, keys, container health
+npm run db:local:reset          # re-apply migrations (empty data)
+npm run db:local:stop           # stop Docker containers
+```
+
+Local services:
+
+- API: `http://127.0.0.1:54321`
+- Studio: `http://127.0.0.1:54323`
+- Mailpit (auth emails): `http://127.0.0.1:54324`
+
+Config lives in `supabase/config.toml`. Migrations are in `supabase/migrations/`.
+
 ## Fixtures
 
 World Cup fixtures are synced from football-data.org into the `matches` table.
