@@ -1,0 +1,147 @@
+import Link from "next/link";
+import { Activity } from "lucide-react";
+import { Badge, Card } from "@/components/ui";
+import { requireAdmin } from "@/lib/auth";
+import { formatAppDateTime } from "@/lib/dates";
+import {
+  getFriendsActivity,
+  type FriendsActivityItem,
+  type FriendsActivityKind,
+} from "@/lib/friends-activity";
+import { t, type Locale, type TranslationKey } from "@/lib/i18n";
+import { getLocale } from "@/lib/i18n-server";
+import { cn } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
+
+const kindLabelKeys: Record<FriendsActivityKind, TranslationKey> = {
+  prediction: "admin.activity.prediction",
+  prediction_updated: "admin.activity.predictionUpdated",
+  chat: "admin.activity.chat",
+  comment: "admin.activity.comment",
+  joined: "admin.activity.joined",
+};
+
+const kindBadgeStyles: Record<FriendsActivityKind, string> = {
+  prediction: "bg-emerald-50 text-emerald-700",
+  prediction_updated: "bg-amber-50 text-amber-700",
+  chat: "bg-sky-50 text-sky-700",
+  comment: "bg-zinc-100 text-zinc-700",
+  joined: "bg-violet-50 text-violet-700",
+};
+
+export default async function AdminActivityPage() {
+  const profile = await requireAdmin();
+  const locale = await getLocale();
+  const activities = await getFriendsActivity(profile.id);
+
+  return (
+    <>
+      <div className="mb-6">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">
+          {t(locale, "admin.activity.eyebrow")}
+        </p>
+        <h1 className="mt-2 text-3xl font-black tracking-tight text-zinc-950">
+          {t(locale, "admin.activity.title")}
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm text-zinc-600">
+          {t(locale, "admin.activity.subtitle")}
+        </p>
+      </div>
+
+      <div className="grid gap-4">
+        {activities.length > 0 ? (
+          activities.map((activity) => (
+            <ActivityCard
+              key={activity.id}
+              activity={activity}
+              locale={locale}
+            />
+          ))
+        ) : (
+          <Card className="text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+              <Activity className="h-5 w-5" />
+            </div>
+            <p className="mt-4 font-semibold text-zinc-950">
+              {t(locale, "admin.activity.empty.title")}
+            </p>
+            <p className="mt-2 text-sm text-zinc-600">
+              {t(locale, "admin.activity.empty.body")}
+            </p>
+          </Card>
+        )}
+      </div>
+    </>
+  );
+}
+
+function ActivityCard({
+  activity,
+  locale,
+}: {
+  activity: FriendsActivityItem;
+  locale: Locale;
+}) {
+  const authorLabel =
+    activity.authorName ?? activity.authorEmail ?? t(locale, "common.friend");
+  const body = getActivityBody(activity, locale, authorLabel);
+
+  return (
+    <Link href={activity.href} className="block">
+      <Card className="transition hover:-translate-y-0.5 hover:shadow-md">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <Badge className={kindBadgeStyles[activity.kind]}>
+                {t(locale, kindLabelKeys[activity.kind])}
+              </Badge>
+              {activity.context && (
+                <span className="text-sm font-bold text-zinc-950">
+                  {activity.context}
+                </span>
+              )}
+            </div>
+            <p className="text-sm font-semibold text-zinc-500">{authorLabel}</p>
+            {body && (
+              <p
+                className={cn(
+                  "mt-2 text-sm leading-6 text-zinc-700",
+                  activity.kind === "chat" || activity.kind === "comment"
+                    ? "whitespace-pre-wrap break-words"
+                    : "font-black text-zinc-950",
+                )}
+              >
+                {body}
+              </p>
+            )}
+          </div>
+          <time className="shrink-0 text-sm font-semibold text-zinc-400">
+            {formatAppDateTime(activity.occurredAt)}
+          </time>
+        </div>
+      </Card>
+    </Link>
+  );
+}
+
+function getActivityBody(
+  activity: FriendsActivityItem,
+  locale: Locale,
+  authorLabel: string,
+) {
+  if (activity.kind === "joined") {
+    return t(locale, "admin.activity.joinedBody", { name: authorLabel });
+  }
+
+  if (
+    activity.kind === "prediction" ||
+    activity.kind === "prediction_updated"
+  ) {
+    return t(locale, "admin.activity.predictionBody", {
+      score: activity.body,
+    });
+  }
+
+  return activity.body;
+}

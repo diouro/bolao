@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import {
+  Activity,
   BarChart3,
   Bell,
   CalendarDays,
@@ -96,12 +97,20 @@ export async function AppShell({
             </NavItem>
           ))}
           {profile.role === "admin" && (
-            <NavItem
-              href="/admin/results"
-              icon={<Shield className="h-4 w-4" />}
-            >
-              {t(locale, "app.resultsAdmin")}
-            </NavItem>
+            <>
+              <NavItem
+                href="/admin/results"
+                icon={<Shield className="h-4 w-4" />}
+              >
+                {t(locale, "app.resultsAdmin")}
+              </NavItem>
+              <NavItem
+                href="/admin/activity"
+                icon={<Activity className="h-4 w-4" />}
+              >
+                {t(locale, "app.activityAdmin")}
+              </NavItem>
+            </>
           )}
         </nav>
         <div className="border-t border-zinc-200 p-4">

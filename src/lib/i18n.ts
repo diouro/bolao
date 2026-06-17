@@ -12,6 +12,20 @@ export const localeLabels: Record<Locale, string> = {
 
 const messages = {
   en: {
+    "admin.activity.chat": "Chat message",
+    "admin.activity.comment": "Match comment",
+    "admin.activity.empty.body":
+      "When friends save picks, comment on matches, or chat, it will show up here.",
+    "admin.activity.empty.title": "No friend activity yet",
+    "admin.activity.eyebrow": "Admin",
+    "admin.activity.joined": "Joined the pool",
+    "admin.activity.joinedBody": "{name} joined the pool",
+    "admin.activity.prediction": "Prediction",
+    "admin.activity.predictionBody": "Picked {score}",
+    "admin.activity.predictionUpdated": "Updated prediction",
+    "admin.activity.subtitle":
+      "Latest actions from everyone in the pool — picks, comments, chat, and signups.",
+    "admin.activity.title": "Friends activity",
     "admin.empty.body": "Matches appear here after kickoff.",
     "admin.empty.title": "No matches are ready yet.",
     "admin.eyebrow": "Admin",
@@ -48,6 +62,7 @@ const messages = {
       "Register with email and password, then start predicting World Cup scores before each match locks.",
     "signup.eyebrow": "Join your friends",
     "signup.title": "Create your Bolão account.",
+    "app.activityAdmin": "Friends activity",
     "app.admin": "Results admin",
     "app.bracket": "Bracket",
     "app.breakdown": "Breakdown",
@@ -197,6 +212,20 @@ const messages = {
     "stats.streak": "Best streak",
   },
   pt: {
+    "admin.activity.chat": "Mensagem no chat",
+    "admin.activity.comment": "Comentário no jogo",
+    "admin.activity.empty.body":
+      "Quando os amigos salvarem palpites, comentarem nos jogos ou conversarem no chat, aparecerá aqui.",
+    "admin.activity.empty.title": "Nenhuma atividade ainda",
+    "admin.activity.eyebrow": "Admin",
+    "admin.activity.joined": "Entrou no bolão",
+    "admin.activity.joinedBody": "{name} entrou no bolão",
+    "admin.activity.prediction": "Palpite",
+    "admin.activity.predictionBody": "Palpitou {score}",
+    "admin.activity.predictionUpdated": "Palpite atualizado",
+    "admin.activity.subtitle":
+      "Últimas ações de todos no bolão — palpites, comentários, chat e cadastros.",
+    "admin.activity.title": "Atividade dos amigos",
     "admin.empty.body": "Os jogos aparecem aqui depois do início.",
     "admin.empty.title": "Nenhum jogo pronto ainda.",
     "admin.eyebrow": "Admin",
@@ -233,6 +262,7 @@ const messages = {
       "Cadastre-se com email e senha, depois comece a palpitar nos placares antes de cada jogo travar.",
     "signup.eyebrow": "Entre com seus amigos",
     "signup.title": "Crie sua conta no Bolão.",
+    "app.activityAdmin": "Atividade dos amigos",
     "app.admin": "Admin resultados",
     "app.bracket": "Chave",
     "app.breakdown": "Pontuação",
