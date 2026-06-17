@@ -18,6 +18,7 @@ export const metadata: Metadata = {
   description: "A friendly World Cup prediction game with rankings and stats.",
   icons: {
     icon: "/favicon.svg",
+    apple: "/favicon.svg",
   },
 };
 
