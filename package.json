@@ -10,6 +10,7 @@
     "lint": "eslint",
     "seed:fixtures": "node scripts/sync-football-data-fixtures.mjs",
     "seed:fixtures:json": "node scripts/seed-fixtures.mjs",
+    "seed:fixtures:correct": "node scripts/apply-fixture-corrections.mjs",
     "deploy:vercel": "bash scripts/deploy-vercel.sh",
     "deploy:vercel:prod": "bash scripts/deploy-vercel.sh --prod --migrate",
     "deploy:vercel:prod:full": "bash scripts/deploy-vercel.sh --prod --sync-env --migrate",
