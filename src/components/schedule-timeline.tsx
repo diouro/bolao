@@ -110,8 +110,8 @@ function ScheduleMatchRow({
   locale: Locale;
   intlLocale: string;
 }) {
-  const home = resolveMatchSide(match, "home");
-  const away = resolveMatchSide(match, "away");
+  const home = resolveMatchSide(match, "home", locale);
+  const away = resolveMatchSide(match, "away", locale);
   const hasResult = hasMatchResult(match);
   const isLive = match.status === "live";
   const isFinished = match.status === "finished" || hasResult;

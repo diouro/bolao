@@ -169,8 +169,8 @@ function SyncFeedback({
 }
 
 function ResultRow({ match, locale }: { match: Match; locale: Locale }) {
-  const home = resolveMatchSide(match, "home");
-  const away = resolveMatchSide(match, "away");
+  const home = resolveMatchSide(match, "home", locale);
+  const away = resolveMatchSide(match, "away", locale);
 
   return (
     <Card className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

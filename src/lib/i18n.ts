@@ -1,3 +1,5 @@
+import { teamMessages } from "@/lib/tournament/team-messages";
+
 export const locales = ["en", "pt"] as const;
 
 export type Locale = (typeof locales)[number];
@@ -216,6 +218,7 @@ const messages = {
     "stats.hits": "hits",
     "stats.noOne": "No one yet",
     "stats.streak": "Best streak",
+    ...teamMessages.en,
   },
   pt: {
     "admin.activity.chat": "Mensagem no chat",
@@ -423,6 +426,7 @@ const messages = {
     "stats.hits": "acertos",
     "stats.noOne": "Ninguém ainda",
     "stats.streak": "Melhor sequência",
+    ...teamMessages.pt,
   },
 } satisfies Record<Locale, Record<string, string>>;
 

@@ -48,8 +48,8 @@ export function MatchCard({
   currentUserId: string;
   locale: Locale;
 }) {
-  const home = resolveMatchSide(match, "home");
-  const away = resolveMatchSide(match, "away");
+  const home = resolveMatchSide(match, "home", locale);
+  const away = resolveMatchSide(match, "away", locale);
   const locked = !isPredictionEditable({
     kickoffAt: match.kickoff_at,
     lockMinutes,

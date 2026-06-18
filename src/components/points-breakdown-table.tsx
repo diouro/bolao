@@ -188,7 +188,7 @@ export function PointsBreakdownTable({
                       : "border-zinc-200 bg-zinc-50 text-zinc-500",
                   )}
                 >
-                  <div className="truncate">{getMatchLabel(match)}</div>
+                  <div className="truncate">{getMatchLabel(match, locale)}</div>
                   <div
                     className={cn(
                       "mt-1 text-[11px] font-semibold normal-case",
@@ -306,8 +306,11 @@ function StickyHeader({
   );
 }
 
-function getMatchLabel(match: PointsBreakdown["matches"][number]) {
-  const home = resolveMatchSide(match, "home");
-  const away = resolveMatchSide(match, "away");
-  return `${home.code ?? home.name} v ${away.code ?? away.name}`;
+function getMatchLabel(
+  match: PointsBreakdown["matches"][number],
+  locale: Locale,
+) {
+  const home = resolveMatchSide(match, "home", locale);
+  const away = resolveMatchSide(match, "away", locale);
+  return `${home.name} v ${away.name}`;
 }

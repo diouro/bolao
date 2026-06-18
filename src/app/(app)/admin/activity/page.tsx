@@ -45,6 +45,7 @@ export default async function AdminActivityPage({
   const { activities, total, totalPages } = await getFriendsActivity(profile.id, {
     page,
     pageSize: FRIENDS_ACTIVITY_PAGE_SIZE,
+    locale,
   });
   const rangeStart = total === 0 ? 0 : (page - 1) * FRIENDS_ACTIVITY_PAGE_SIZE + 1;
   const rangeEnd = Math.min(page * FRIENDS_ACTIVITY_PAGE_SIZE, total);

@@ -1,5 +1,6 @@
+import type { Locale } from "@/lib/i18n";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { resolveMatchSide } from "@/lib/tournament/resolve-slots";
+import { formatMatchTeamsLabel } from "@/lib/tournament/resolve-slots";
 import type { ChatMessage, Match, Prediction, Profile } from "@/lib/types";
 
 export type FriendsActivityKind =
@@ -47,8 +48,10 @@ export async function getFriendsActivity(
   options: {
     page?: number;
     pageSize?: number;
+    locale?: Locale;
   } = {},
 ): Promise<FriendsActivityPage> {
+  const locale = options.locale ?? "en";
   const pageSize = options.pageSize ?? FRIENDS_ACTIVITY_PAGE_SIZE;
   const requestedPage = options.page ?? 1;
   const supabase = await createSupabaseServerClient();
@@ -156,7 +159,7 @@ export async function getFriendsActivity(
         authorName: profile?.display_name ?? null,
         authorEmail: profile?.email ?? null,
         body: `${prediction.home_score}-${prediction.away_score}`,
-        context: match ? getMatchTeamsLabel(match) : null,
+        context: match ? formatMatchTeamsLabel(match, locale) : null,
         href: getPredictionHref(prediction.match_id, match),
       };
     }),
@@ -187,7 +190,7 @@ export async function getFriendsActivity(
         authorName: profile?.display_name ?? null,
         authorEmail: profile?.email ?? null,
         body: comment.body,
-        context: match ? getMatchTeamsLabel(match) : null,
+        context: match ? formatMatchTeamsLabel(match, locale) : null,
         href: getPredictionHref(comment.match_id, match),
       };
     }),
@@ -232,14 +235,6 @@ async function getMatchesById(ids: string[]) {
 
   return matchesById;
 }
-
-function getMatchTeamsLabel(match: Match) {
-  const home = resolveMatchSide(match, "home");
-  const away = resolveMatchSide(match, "away");
-
-  return `${home.code ?? home.name} v ${away.code ?? away.name}`;
-}
-
 function getPredictionHref(matchId: string, match?: Match) {
   if (!match) {
     return `/predictions#match-${matchId}`;

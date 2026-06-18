@@ -29,8 +29,8 @@ export function BracketMatchCell({
   compact?: boolean;
   className?: string;
 }) {
-  const home = resolveMatchSide(match, "home");
-  const away = resolveMatchSide(match, "away");
+  const home = resolveMatchSide(match, "home", locale);
+  const away = resolveMatchSide(match, "away", locale);
   const hasResult = hasMatchResult(match);
   const isLive = match.status === "live";
   const isFinished = match.status === "finished" || hasResult;
@@ -134,7 +134,7 @@ function BracketTeam({
           side.isPlaceholder && "text-zinc-500",
         )}
       >
-        {side.code ?? side.name}
+        {side.name}
       </span>
       <span className="w-4 shrink-0 text-right text-[11px] font-black tabular-nums text-zinc-700">
         {score ?? "-"}
