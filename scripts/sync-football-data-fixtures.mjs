@@ -213,7 +213,13 @@ function mapGroup(group) {
 }
 
 function normalizeCode(code) {
-  return code?.trim().toUpperCase() || null;
+  const normalized = code?.trim().toUpperCase() || null;
+
+  if (normalized === "URY") {
+    return "URU";
+  }
+
+  return normalized;
 }
 
 function stringifyId(id) {

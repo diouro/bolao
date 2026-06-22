@@ -3,6 +3,7 @@ import {
   getFootballDataSeason,
 } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { normalizeTeamCode } from "@/lib/tournament/team-codes";
 import type { Match } from "@/lib/types";
 import type {
   MatchResult,
@@ -104,8 +105,8 @@ export class FootballDataResultsProvider implements ResultsProvider {
           external_match_id: String(remoteMatch.id),
           external_home_team_id: stringifyId(remoteMatch.homeTeam.id),
           external_away_team_id: stringifyId(remoteMatch.awayTeam.id),
-          home_team_code: normalizeCode(remoteMatch.homeTeam.tla),
-          away_team_code: normalizeCode(remoteMatch.awayTeam.tla),
+          home_team_code: normalizeTeamCode(remoteMatch.homeTeam.tla),
+          away_team_code: normalizeTeamCode(remoteMatch.awayTeam.tla),
           home_team_name: remoteMatch.homeTeam.name ?? null,
           away_team_name: remoteMatch.awayTeam.name ?? null,
         })
@@ -205,8 +206,8 @@ function findLocalMatch(remoteMatch: FootballDataMatch, localMatches: Match[]) {
     return byExternalId;
   }
 
-  const homeCode = normalizeCode(remoteMatch.homeTeam.tla);
-  const awayCode = normalizeCode(remoteMatch.awayTeam.tla);
+  const homeCode = normalizeTeamCode(remoteMatch.homeTeam.tla);
+  const awayCode = normalizeTeamCode(remoteMatch.awayTeam.tla);
 
   const byExternalTeamIds = localMatches.find(
     (match) =>
@@ -254,10 +255,6 @@ function nearKickoff(localKickoff: string, remoteKickoff: string) {
     Math.abs(new Date(localKickoff).getTime() - new Date(remoteKickoff).getTime()) <
     oneDayMs
   );
-}
-
-function normalizeCode(code?: string | null) {
-  return code?.trim().toUpperCase() || null;
 }
 
 function stringifyId(id?: number | null) {

@@ -1,4 +1,5 @@
 import { groupOrder, type GroupCategory } from "@/lib/tournament/fixture-categories";
+import { normalizeTeamCode } from "@/lib/tournament/team-codes";
 import type { Match, Team } from "@/lib/types";
 
 export type GroupStandingRow = {
@@ -96,7 +97,8 @@ export function computeGroupStandings(
     const groupStandings = new Map<string, MutableStanding>();
 
     for (const team of groupTeams) {
-      groupStandings.set(team.code, createStanding(team.code));
+      const teamCode = normalizeTeamCode(team.code)!;
+      groupStandings.set(teamCode, createStanding(teamCode));
     }
 
     standingsByGroup.set(groupCode, groupStandings);
@@ -124,8 +126,15 @@ export function computeGroupStandings(
       continue;
     }
 
-    const homeStanding = groupStandings.get(match.home_team_code);
-    const awayStanding = groupStandings.get(match.away_team_code);
+    const homeTeamCode = normalizeTeamCode(match.home_team_code);
+    const awayTeamCode = normalizeTeamCode(match.away_team_code);
+
+    if (!homeTeamCode || !awayTeamCode) {
+      continue;
+    }
+
+    const homeStanding = groupStandings.get(homeTeamCode);
+    const awayStanding = groupStandings.get(awayTeamCode);
 
     if (!homeStanding || !awayStanding) {
       continue;

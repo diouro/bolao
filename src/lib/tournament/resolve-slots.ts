@@ -1,4 +1,5 @@
 import { t, type Locale } from "@/lib/i18n";
+import { normalizeTeamCode } from "@/lib/tournament/team-codes";
 import { getLocalizedTeamName } from "@/lib/tournament/team-names";
 import type { Match } from "@/lib/types";
 
@@ -17,7 +18,7 @@ export function resolveMatchSide(
   const code = side === "home" ? match.home_team_code : match.away_team_code;
   const apiName = side === "home" ? match.home_team_name : match.away_team_name;
   const slot = side === "home" ? match.home_slot : match.away_slot;
-  const teamCode = code;
+  const teamCode = normalizeTeamCode(code);
 
   if (teamCode || apiName) {
     return {

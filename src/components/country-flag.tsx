@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui";
+import { normalizeTeamCode } from "@/lib/tournament/team-codes";
 
 const fifaToIso: Record<string, string> = {
   ALG: "dz",
@@ -60,7 +61,8 @@ export function CountryFlag({
   slot?: string | null;
   className?: string;
 }) {
-  const iso = code ? fifaToIso[code] : null;
+  const normalizedCode = normalizeTeamCode(code);
+  const iso = normalizedCode ? fifaToIso[normalizedCode] : null;
 
   if (!iso) {
     return (
@@ -76,7 +78,7 @@ export function CountryFlag({
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={`https://flagcdn.com/${iso}.svg`}
-      alt={`${code} flag`}
+      alt={`${normalizedCode} flag`}
       className={className ?? "h-8 w-11 rounded-md object-cover shadow-sm"}
       loading="lazy"
     />
