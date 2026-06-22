@@ -6,9 +6,9 @@ import {
   CalendarDays,
   Check,
   GitBranch,
+  LayoutGrid,
   ListChecks,
   LogOut,
-  MessageCircle,
   Shield,
   Trophy,
 } from "lucide-react";
@@ -26,13 +26,43 @@ import { getMentionHandle } from "@/lib/profiles";
 import type { Profile } from "@/lib/types";
 
 const navItems = [
-  { key: "dashboard", labelKey: "app.dashboard", href: "/dashboard", icon: ListChecks },
-  { key: "predictions", labelKey: "app.predictions", href: "/predictions", icon: Trophy },
-  { key: "schedule", labelKey: "app.schedule", href: "/schedule", icon: CalendarDays },
-  { key: "bracket", labelKey: "app.bracket", href: "/bracket", icon: GitBranch },
-  { key: "leaderboard", labelKey: "app.leaderboard", href: "/leaderboard", icon: BarChart3 },
-  { key: "breakdown", labelKey: "app.breakdown", href: "/breakdown", icon: ListChecks },
-  { key: "chat", labelKey: "app.chat", href: "/chat", icon: MessageCircle },
+  {
+    key: "dashboard",
+    labelKey: "app.dashboard",
+    href: "/dashboard",
+    icon: ListChecks,
+  },
+  {
+    key: "predictions",
+    labelKey: "app.predictions",
+    href: "/predictions",
+    icon: Trophy,
+  },
+  {
+    key: "schedule",
+    labelKey: "app.schedule",
+    href: "/schedule",
+    icon: CalendarDays,
+  },
+  { key: "groups", labelKey: "app.groups", href: "/groups", icon: LayoutGrid },
+  {
+    key: "bracket",
+    labelKey: "app.bracket",
+    href: "/bracket",
+    icon: GitBranch,
+  },
+  {
+    key: "leaderboard",
+    labelKey: "app.leaderboard",
+    href: "/leaderboard",
+    icon: BarChart3,
+  },
+  {
+    key: "breakdown",
+    labelKey: "app.breakdown",
+    href: "/breakdown",
+    icon: ListChecks,
+  },
   { key: "mentions", labelKey: "app.mentions", href: "/mentions", icon: Bell },
   { key: "stats", labelKey: "app.stats", href: "/stats", icon: BarChart3 },
 ];
@@ -154,7 +184,9 @@ export async function AppShell({
                   <p className="text-sm font-black text-zinc-950">Bolão</p>
                   {profile.has_paid && <PaidBadge />}
                 </div>
-                <p className="truncate text-xs text-zinc-500">{profile.email}</p>
+                <p className="truncate text-xs text-zinc-500">
+                  {profile.email}
+                </p>
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-2">
@@ -163,7 +195,11 @@ export async function AppShell({
                 <input type="hidden" name="redirectTo" value="/signin" />
                 <Button
                   className="h-10 w-10 border border-zinc-200 bg-white p-0 text-zinc-700 hover:bg-zinc-50"
-                  pendingChildren={<span className="sr-only">{t(locale, "app.loggingOut")}</span>}
+                  pendingChildren={
+                    <span className="sr-only">
+                      {t(locale, "app.loggingOut")}
+                    </span>
+                  }
                   aria-label={t(locale, "app.logout")}
                 >
                   <LogOut className="h-4 w-4" />
