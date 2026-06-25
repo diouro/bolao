@@ -153,3 +153,63 @@ export function computeGroupStandings(
     return { groupCode, rows };
   });
 }
+
+export function isGroupStageComplete(matches: Match[]) {
+  const groupMatches = matches.filter((match) => match.round === "group");
+
+  if (groupMatches.length === 0) {
+    return false;
+  }
+
+  return groupMatches.every(
+    (match) =>
+      match.status === "finished" &&
+      match.home_score != null &&
+      match.away_score != null,
+  );
+}
+
+export type QualifiedThirdPlaceTeam = GroupStandingRow & {
+  groupCode: GroupCategory;
+};
+
+export function getQualifiedThirdPlaceTeams(
+  standings: GroupStandings[],
+): QualifiedThirdPlaceTeam[] {
+  const thirdPlaceTeams = standings.flatMap((group) => {
+    const third = group.rows.find((row) => row.rank === 3);
+
+    if (!third) {
+      return [];
+    }
+
+    return [{ ...third, groupCode: group.groupCode }];
+  });
+
+  return thirdPlaceTeams
+    .sort((left, right) =>
+      compareStandings(
+        {
+          teamCode: left.teamCode,
+          played: left.played,
+          won: left.won,
+          drawn: left.drawn,
+          lost: left.lost,
+          goalsFor: left.goalsFor,
+          goalsAgainst: left.goalsAgainst,
+          points: left.points,
+        },
+        {
+          teamCode: right.teamCode,
+          played: right.played,
+          won: right.won,
+          drawn: right.drawn,
+          lost: right.lost,
+          goalsFor: right.goalsFor,
+          goalsAgainst: right.goalsAgainst,
+          points: right.points,
+        },
+      ),
+    )
+    .slice(0, 8);
+}

@@ -42,6 +42,7 @@ Set:
 - `RESULTS_PROVIDER=football-data`
 - `FOOTBALL_DATA_API_TOKEN`
 - `FOOTBALL_DATA_SEASON=2026`
+- `CRON_SECRET` (random string for Vercel cron auth)
 
 For Vercel production, set these server environment variables in the project
 settings, or sync them from `.env.production` with:
@@ -109,8 +110,9 @@ and the leaderboard displays the current prize pool as paid players times `$5`.
 
 ## Result Sync
 
-The admin results page can sync finished scores from
-[football-data.org](https://www.football-data.org/client/register).
+Match scores sync from [football-data.org](https://www.football-data.org/client/register).
+On Vercel, a cron job runs every 5 minutes automatically. Admins can also sync
+manually from `/admin/results`.
 
 Set these env vars in `.env.local` and `.env.production`:
 
@@ -118,11 +120,35 @@ Set these env vars in `.env.local` and `.env.production`:
 RESULTS_PROVIDER=football-data
 FOOTBALL_DATA_API_TOKEN=your_token_here
 FOOTBALL_DATA_SEASON=2026
+CRON_SECRET=generate_a_long_random_string
 ```
 
-Then open `/admin/results` and click `Sync finished scores`. The sync updates
-`matches.home_score`, `matches.away_score`, and marks finished matches as
-`finished`.
+The free football-data.org plan allows **10 requests/minute** and returns
+**delayed** scores (typically a few minutes after full time). Each sync uses
+one API call for the whole World Cup.
+
+### Automatic sync (Vercel)
+
+`vercel.json` schedules `GET /api/cron/sync-results` every 5 minutes. Vercel
+sends `Authorization: Bearer $CRON_SECRET` when `CRON_SECRET` is set in project
+settings.
+
+Test locally (reads `CRON_SECRET` from `.env.local`):
+
+```bash
+npm run cron:sync-results
+```
+
+Or with curl — note `$CRON_SECRET` is **not** loaded from `.env.local` into your shell; paste the value or export it first:
+
+```bash
+export CRON_SECRET='your_secret_here'
+curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/sync-results
+```
+
+Manual admin sync still works from `/admin/results`. Both paths update
+`matches.home_score`, `matches.away_score`, and `matches.status` (`live` or
+`finished`).
 
 ## Useful Commands
 

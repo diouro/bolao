@@ -45,3 +45,7 @@ export function getFootballDataApiToken() {
 export function getFootballDataSeason() {
   return readEnv("FOOTBALL_DATA_SEASON") || "2026";
 }
+
+export function getCronSecret() {
+  return readEnv("CRON_SECRET");
+}

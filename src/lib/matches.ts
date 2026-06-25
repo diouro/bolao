@@ -1,4 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getTeams } from "@/lib/tournament/load-fixtures";
+import { enrichMatchesWithBracketTeams } from "@/lib/tournament/resolve-bracket";
 import type {
   Match,
   MatchFriendPrediction,
@@ -8,6 +10,10 @@ import type {
 } from "@/lib/types";
 
 export const MATCH_FRIEND_PREDICTIONS_LIMIT = 50;
+
+function withResolvedBracketTeams(matches: Match[]) {
+  return enrichMatchesWithBracketTeams(matches, getTeams());
+}
 
 export async function getMatchesWithUserPredictions(userId: string) {
   const supabase = await createSupabaseServerClient();
@@ -32,7 +38,7 @@ export async function getMatchesWithUserPredictions(userId: string) {
     ]),
   );
 
-  return ((matches ?? []) as Match[]).map((match) => ({
+  return withResolvedBracketTeams((matches ?? []) as Match[]).map((match) => ({
     ...match,
     prediction: predictionMap.get(match.id) ?? null,
   })) satisfies MatchWithPrediction[];
@@ -49,7 +55,7 @@ export async function getAllMatches() {
     throw new Error(error.message);
   }
 
-  return (data ?? []) as Match[];
+  return withResolvedBracketTeams((data ?? []) as Match[]);
 }
 
 export async function getAllPredictions() {

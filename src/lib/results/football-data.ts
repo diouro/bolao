@@ -4,7 +4,7 @@ import {
 } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeTeamCode } from "@/lib/tournament/team-codes";
-import type { Match } from "@/lib/types";
+import type { Match, MatchStatus } from "@/lib/types";
 import type {
   MatchResult,
   ResultsProvider,
@@ -27,7 +27,15 @@ type FootballDataMatch = {
   homeTeam: FootballDataTeam;
   awayTeam: FootballDataTeam;
   score: {
-    fullTime: {
+    fullTime?: {
+      home: number | null;
+      away: number | null;
+    };
+    regularTime?: {
+      home: number | null;
+      away: number | null;
+    };
+    halfTime?: {
       home: number | null;
       away: number | null;
     };
@@ -52,7 +60,7 @@ export class FootballDataResultsProvider implements ResultsProvider {
     }
 
     const remoteMatch = await this.fetchMatch(match.external_match_id);
-    const result = extractFinalScore(remoteMatch);
+    const result = extractScore(remoteMatch);
 
     if (!result) {
       return null;
@@ -66,7 +74,7 @@ export class FootballDataResultsProvider implements ResultsProvider {
   }
 
   async syncFinishedMatches(): Promise<SyncResultsSummary> {
-    const remoteMatches = await this.fetchFinishedMatches();
+    const remoteMatches = await this.fetchCompetitionMatches();
     const supabase = createSupabaseAdminClient();
     const { data: localMatches, error } = await supabase
       .from("matches")
@@ -81,9 +89,9 @@ export class FootballDataResultsProvider implements ResultsProvider {
     let skipped = 0;
 
     for (const remoteMatch of remoteMatches) {
-      const result = extractFinalScore(remoteMatch);
+      const parsed = parseRemoteMatch(remoteMatch);
 
-      if (!result) {
+      if (!parsed) {
         skipped += 1;
         continue;
       }
@@ -95,12 +103,17 @@ export class FootballDataResultsProvider implements ResultsProvider {
         continue;
       }
 
+      if (!matchNeedsUpdate(localMatch, parsed)) {
+        skipped += 1;
+        continue;
+      }
+
       const { data: updatedMatch, error: updateError } = await supabase
         .from("matches")
         .update({
-          home_score: result.homeScore,
-          away_score: result.awayScore,
-          status: "finished",
+          home_score: parsed.homeScore,
+          away_score: parsed.awayScore,
+          status: parsed.status,
           external_provider: providerName,
           external_match_id: String(remoteMatch.id),
           external_home_team_id: stringifyId(remoteMatch.homeTeam.id),
@@ -134,10 +147,9 @@ export class FootballDataResultsProvider implements ResultsProvider {
     };
   }
 
-  private async fetchFinishedMatches() {
+  private async fetchCompetitionMatches() {
     const params = new URLSearchParams({
       season: getFootballDataSeason(),
-      status: "FINISHED",
     });
 
     const data = await this.fetchFootballData<{ matches: FootballDataMatch[] }>(
@@ -176,22 +188,94 @@ export class FootballDataResultsProvider implements ResultsProvider {
   }
 }
 
-function extractFinalScore(match: FootballDataMatch) {
-  const homeScore = match.score?.fullTime?.home;
-  const awayScore = match.score?.fullTime?.away;
+type ParsedRemoteMatch = {
+  status: MatchStatus;
+  homeScore: number;
+  awayScore: number;
+};
 
-  if (
-    match.status !== "FINISHED" ||
-    homeScore == null ||
-    awayScore == null
-  ) {
+function parseRemoteMatch(
+  remoteMatch: FootballDataMatch,
+): ParsedRemoteMatch | null {
+  const score = extractScore(remoteMatch);
+
+  if (!score) {
+    return null;
+  }
+
+  const status = mapRemoteStatus(remoteMatch.status);
+
+  if (status === "scheduled") {
     return null;
   }
 
   return {
-    homeScore,
-    awayScore,
+    status,
+    homeScore: score.homeScore,
+    awayScore: score.awayScore,
   };
+}
+
+function extractScore(remoteMatch: FootballDataMatch): {
+  homeScore: number;
+  awayScore: number;
+} | null {
+  const fullTime = remoteMatch.score?.fullTime;
+  const regularTime = remoteMatch.score?.regularTime;
+  const halfTime = remoteMatch.score?.halfTime;
+
+  if (remoteMatch.status === "FINISHED") {
+    if (fullTime?.home != null && fullTime?.away != null) {
+      return {
+        homeScore: fullTime.home,
+        awayScore: fullTime.away,
+      };
+    }
+
+    return null;
+  }
+
+  if (["IN_PLAY", "PAUSED"].includes(remoteMatch.status)) {
+    const liveScore =
+      regularTime?.home != null && regularTime?.away != null
+        ? regularTime
+        : halfTime?.home != null && halfTime?.away != null
+          ? halfTime
+          : null;
+
+    if (
+      liveScore &&
+      liveScore.home != null &&
+      liveScore.away != null
+    ) {
+      return {
+        homeScore: liveScore.home,
+        awayScore: liveScore.away,
+      };
+    }
+  }
+
+  return null;
+}
+
+function mapRemoteStatus(status: string): MatchStatus {
+  if (status === "FINISHED") {
+    return "finished";
+  }
+
+  if (["IN_PLAY", "PAUSED"].includes(status)) {
+    return "live";
+  }
+
+  return "scheduled";
+}
+
+function matchNeedsUpdate(localMatch: Match, parsed: ParsedRemoteMatch) {
+  return (
+    localMatch.status !== parsed.status ||
+    localMatch.home_score !== parsed.homeScore ||
+    localMatch.away_score !== parsed.awayScore
+  );
 }
 
 function findLocalMatch(remoteMatch: FootballDataMatch, localMatches: Match[]) {
