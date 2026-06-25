@@ -365,7 +365,7 @@
       "group": "C",
       "home": "BRA",
       "away": "HAI",
-      "kickoff": "2026-06-20T01:00:00Z"
+      "kickoff": "2026-06-20T00:30:00Z"
     },
     {
       "id": "wc2026-c-4",
@@ -827,10 +827,10 @@
       "id": "wc2026-r32-1",
       "round": "round_of_32",
       "home": {
-        "slot": "1A"
+        "slot": "2A"
       },
       "away": {
-        "slot": "3CDE"
+        "slot": "2B"
       },
       "kickoff": "2026-06-28T19:00:00Z"
     },
@@ -838,12 +838,12 @@
       "id": "wc2026-r32-2",
       "round": "round_of_32",
       "home": {
-        "slot": "2B"
+        "slot": "1F"
       },
       "away": {
-        "slot": "2F"
+        "slot": "2C"
       },
-      "kickoff": "2026-06-28T22:00:00Z"
+      "kickoff": "2026-06-30T01:00:00Z"
     },
     {
       "id": "wc2026-r32-3",
@@ -852,86 +852,86 @@
         "slot": "1C"
       },
       "away": {
-        "slot": "3ABF"
+        "slot": "2F"
       },
-      "kickoff": "2026-06-29T19:00:00Z"
+      "kickoff": "2026-06-29T17:00:00Z"
     },
     {
       "id": "wc2026-r32-4",
       "round": "round_of_32",
       "home": {
-        "slot": "1E"
+        "slot": "2E"
       },
       "away": {
-        "slot": "2D"
+        "slot": "2I"
       },
-      "kickoff": "2026-06-29T22:00:00Z"
+      "kickoff": "2026-06-30T17:00:00Z"
     },
     {
       "id": "wc2026-r32-5",
       "round": "round_of_32",
       "home": {
-        "slot": "1F"
+        "slot": "1A"
       },
       "away": {
-        "slot": "2C"
+        "slot": "3CEFHI"
       },
-      "kickoff": "2026-06-30T19:00:00Z"
+      "kickoff": "2026-07-01T01:00:00Z"
     },
     {
       "id": "wc2026-r32-6",
       "round": "round_of_32",
       "home": {
-        "slot": "1H"
+        "slot": "1L"
       },
       "away": {
-        "slot": "3EIJ"
+        "slot": "3EHIJK"
       },
-      "kickoff": "2026-06-30T22:00:00Z"
+      "kickoff": "2026-07-01T16:00:00Z"
     },
     {
       "id": "wc2026-r32-7",
       "round": "round_of_32",
       "home": {
-        "slot": "1B"
+        "slot": "1D"
       },
       "away": {
-        "slot": "3ACD"
+        "slot": "3BEFIJ"
       },
-      "kickoff": "2026-07-01T19:00:00Z"
+      "kickoff": "2026-07-02T00:00:00Z"
     },
     {
       "id": "wc2026-r32-8",
       "round": "round_of_32",
       "home": {
-        "slot": "1D"
+        "slot": "1G"
       },
       "away": {
-        "slot": "3BEF"
+        "slot": "3AEHIJ"
       },
-      "kickoff": "2026-07-01T22:00:00Z"
+      "kickoff": "2026-07-01T20:00:00Z"
     },
     {
       "id": "wc2026-r32-9",
       "round": "round_of_32",
       "home": {
-        "slot": "1G"
+        "slot": "2K"
       },
       "away": {
-        "slot": "3HIK"
+        "slot": "2L"
       },
-      "kickoff": "2026-07-02T19:00:00Z"
+      "kickoff": "2026-07-02T23:00:00Z"
     },
     {
       "id": "wc2026-r32-10",
       "round": "round_of_32",
       "home": {
-        "slot": "2A"
+        "slot": "1H"
       },
       "away": {
-        "slot": "2C"
+        "slot": "2J"
       },
-      "kickoff": "2026-07-02T22:00:00Z"
+      "kickoff": "2026-07-02T19:00:00Z"
     },
     {
       "id": "wc2026-r32-11",
@@ -940,64 +940,64 @@
         "slot": "1J"
       },
       "away": {
-        "slot": "2I"
+        "slot": "2H"
       },
-      "kickoff": "2026-07-03T19:00:00Z"
+      "kickoff": "2026-07-03T22:00:00Z"
     },
     {
       "id": "wc2026-r32-12",
       "round": "round_of_32",
       "home": {
-        "slot": "1L"
+        "slot": "2D"
       },
       "away": {
-        "slot": "3EFH"
+        "slot": "2G"
       },
-      "kickoff": "2026-07-03T22:00:00Z"
+      "kickoff": "2026-07-03T18:00:00Z"
     },
     {
       "id": "wc2026-r32-13",
       "round": "round_of_32",
       "home": {
-        "slot": "1I"
+        "slot": "1B"
       },
       "away": {
-        "slot": "3CGL"
+        "slot": "3EFGIJ"
       },
-      "kickoff": "2026-07-04T19:00:00Z"
+      "kickoff": "2026-07-03T03:00:00Z"
     },
     {
       "id": "wc2026-r32-14",
       "round": "round_of_32",
       "home": {
-        "slot": "2K"
+        "slot": "1K"
       },
       "away": {
-        "slot": "2L"
+        "slot": "3DEIJL"
       },
-      "kickoff": "2026-07-04T22:00:00Z"
+      "kickoff": "2026-07-04T01:30:00Z"
     },
     {
       "id": "wc2026-r32-15",
       "round": "round_of_32",
       "home": {
-        "slot": "1K"
+        "slot": "1E"
       },
       "away": {
-        "slot": "3HIJ"
+        "slot": "3ABCDF"
       },
-      "kickoff": "2026-07-05T19:00:00Z"
+      "kickoff": "2026-06-29T20:30:00Z"
     },
     {
       "id": "wc2026-r32-16",
       "round": "round_of_32",
       "home": {
-        "slot": "2G"
+        "slot": "1I"
       },
       "away": {
-        "slot": "2H"
+        "slot": "3CDFGH"
       },
-      "kickoff": "2026-07-05T22:00:00Z"
+      "kickoff": "2026-06-30T21:00:00Z"
     },
     {
       "id": "wc2026-r16-1",
@@ -1008,7 +1008,7 @@
       "away": {
         "slot": "W R32-2"
       },
-      "kickoff": "2026-07-06T19:00:00Z"
+      "kickoff": "2026-07-04T17:00:00Z"
     },
     {
       "id": "wc2026-r16-2",
@@ -1019,7 +1019,7 @@
       "away": {
         "slot": "W R32-4"
       },
-      "kickoff": "2026-07-06T22:00:00Z"
+      "kickoff": "2026-07-05T20:00:00Z"
     },
     {
       "id": "wc2026-r16-3",
@@ -1030,7 +1030,7 @@
       "away": {
         "slot": "W R32-6"
       },
-      "kickoff": "2026-07-07T19:00:00Z"
+      "kickoff": "2026-07-06T00:00:00Z"
     },
     {
       "id": "wc2026-r16-4",
@@ -1041,7 +1041,7 @@
       "away": {
         "slot": "W R32-8"
       },
-      "kickoff": "2026-07-07T22:00:00Z"
+      "kickoff": "2026-07-07T00:00:00Z"
     },
     {
       "id": "wc2026-r16-5",
@@ -1052,7 +1052,7 @@
       "away": {
         "slot": "W R32-10"
       },
-      "kickoff": "2026-07-08T19:00:00Z"
+      "kickoff": "2026-07-06T19:00:00Z"
     },
     {
       "id": "wc2026-r16-6",
@@ -1063,7 +1063,7 @@
       "away": {
         "slot": "W R32-12"
       },
-      "kickoff": "2026-07-08T22:00:00Z"
+      "kickoff": "2026-07-07T16:00:00Z"
     },
     {
       "id": "wc2026-r16-7",
@@ -1074,7 +1074,7 @@
       "away": {
         "slot": "W R32-14"
       },
-      "kickoff": "2026-07-09T19:00:00Z"
+      "kickoff": "2026-07-07T20:00:00Z"
     },
     {
       "id": "wc2026-r16-8",
@@ -1085,7 +1085,7 @@
       "away": {
         "slot": "W R32-16"
       },
-      "kickoff": "2026-07-09T22:00:00Z"
+      "kickoff": "2026-07-04T21:00:00Z"
     },
     {
       "id": "wc2026-qf-1",
@@ -1096,7 +1096,7 @@
       "away": {
         "slot": "W R16-2"
       },
-      "kickoff": "2026-07-10T19:00:00Z"
+      "kickoff": "2026-07-11T21:00:00Z"
     },
     {
       "id": "wc2026-qf-2",
@@ -1107,7 +1107,7 @@
       "away": {
         "slot": "W R16-4"
       },
-      "kickoff": "2026-07-10T22:00:00Z"
+      "kickoff": "2026-07-12T01:00:00Z"
     },
     {
       "id": "wc2026-qf-3",
@@ -1118,7 +1118,7 @@
       "away": {
         "slot": "W R16-6"
       },
-      "kickoff": "2026-07-11T19:00:00Z"
+      "kickoff": "2026-07-10T19:00:00Z"
     },
     {
       "id": "wc2026-qf-4",
@@ -1129,7 +1129,7 @@
       "away": {
         "slot": "W R16-8"
       },
-      "kickoff": "2026-07-11T22:00:00Z"
+      "kickoff": "2026-07-09T20:00:00Z"
     },
     {
       "id": "wc2026-sf-1",
@@ -1140,7 +1140,7 @@
       "away": {
         "slot": "W QF-2"
       },
-      "kickoff": "2026-07-14T19:00:00Z"
+      "kickoff": "2026-07-15T19:00:00Z"
     },
     {
       "id": "wc2026-sf-2",
@@ -1151,7 +1151,7 @@
       "away": {
         "slot": "W QF-4"
       },
-      "kickoff": "2026-07-15T19:00:00Z"
+      "kickoff": "2026-07-14T19:00:00Z"
     },
     {
       "id": "wc2026-third",
@@ -1162,7 +1162,7 @@
       "away": {
         "slot": "L SF-2"
       },
-      "kickoff": "2026-07-18T19:00:00Z"
+      "kickoff": "2026-07-18T21:00:00Z"
     },
     {
       "id": "wc2026-final",

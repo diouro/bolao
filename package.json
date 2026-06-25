@@ -10,6 +10,7 @@
     "lint": "eslint",
     "seed:fixtures": "node scripts/sync-football-data-fixtures.mjs",
     "seed:fixtures:json": "node scripts/seed-fixtures.mjs",
+    "seed:fixtures:openfootball": "node scripts/sync-openfootball-fixtures.mjs",
     "seed:fixtures:correct": "node scripts/apply-fixture-corrections.mjs",
     "cron:sync-results": "node --env-file=.env.local scripts/cron-sync-results.mjs",
     "deploy:vercel": "bash scripts/deploy-vercel.sh",

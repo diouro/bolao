@@ -74,10 +74,11 @@ if (error) {
 }
 
 const duplicatePlaceholderSummary = await removeDuplicateApiPlaceholderFixtures();
+const duplicateKnockoutSummary = await removeDuplicateKnockoutApiFixtures();
 const dedupeSummary = await mergeDuplicateApiFixtures();
 
 console.log(
-  `Synced ${rows.length} World Cup fixtures from football-data.org. Removed ${dedupeSummary.removed} duplicate JSON fixture${dedupeSummary.removed === 1 ? "" : "s"} and ${duplicatePlaceholderSummary.removed} generic API knockout placeholder${duplicatePlaceholderSummary.removed === 1 ? "" : "s"}.`,
+  `Synced ${rows.length} World Cup fixtures from football-data.org. Removed ${dedupeSummary.removed} duplicate JSON fixture${dedupeSummary.removed === 1 ? "" : "s"}, ${duplicatePlaceholderSummary.removed} generic API knockout placeholder${duplicatePlaceholderSummary.removed === 1 ? "" : "s"}, and ${duplicateKnockoutSummary.removed} duplicate API knockout fixture${duplicateKnockoutSummary.removed === 1 ? "" : "s"}.`,
 );
 
 async function fetchFootballDataMatches() {
@@ -328,6 +329,59 @@ async function removeDuplicateApiPlaceholderFixtures() {
       .from("matches")
       .delete()
       .eq("id", match.id);
+
+    if (deleteError) {
+      throw new Error(deleteError.message);
+    }
+
+    removed += 1;
+  }
+
+  return { removed };
+}
+
+async function removeDuplicateKnockoutApiFixtures() {
+  const { data: matches, error: matchesError } = await supabase
+    .from("matches")
+    .select("*")
+    .neq("round", "group")
+    .order("kickoff_at", { ascending: true });
+
+  if (matchesError) {
+    throw new Error(matchesError.message);
+  }
+
+  const jsonMatches = (matches ?? []).filter(
+    (match) => !match.external_provider && match.id.startsWith("wc2026-"),
+  );
+
+  let removed = 0;
+
+  for (const apiMatch of matches ?? []) {
+    if (
+      apiMatch.external_provider !== providerName ||
+      !apiMatch.id.startsWith("fd-")
+    ) {
+      continue;
+    }
+
+    const replacement = jsonMatches.find(
+      (match) =>
+        match.round === apiMatch.round &&
+        match.kickoff_at === apiMatch.kickoff_at,
+    );
+
+    if (!replacement || replacement.id === apiMatch.id) {
+      continue;
+    }
+
+    await movePredictions(apiMatch.id, replacement.id);
+    await moveComments(apiMatch.id, replacement.id);
+
+    const { error: deleteError } = await supabase
+      .from("matches")
+      .delete()
+      .eq("id", apiMatch.id);
 
     if (deleteError) {
       throw new Error(deleteError.message);
