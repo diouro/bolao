@@ -101,14 +101,15 @@ export function TournamentBracket({
               return [column];
             }
 
+            const outerRound = rightRounds[index + 1]!;
             const pairCount =
-              getBracketHalfMatches(round, "right", matches).length / 2;
+              getBracketHalfMatches(outerRound, "right", matches).length / 2;
 
             return [
               column,
               <BracketConnectorColumn
                 key={`right-fork-${round}`}
-                sourceRound={round}
+                sourceRound={outerRound}
                 pairCount={pairCount}
                 mirrored
               />,
