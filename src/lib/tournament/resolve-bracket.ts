@@ -1,12 +1,20 @@
+import { type GroupCategory } from "@/lib/tournament/fixture-categories";
 import {
   computeGroupStandings,
   getQualifiedThirdPlaceTeams,
   isGroupStageComplete,
   type GroupStandings,
+  type QualifiedThirdPlaceTeam,
 } from "@/lib/tournament/group-standings";
 import { getKnockoutMatchNumber } from "@/lib/tournament/knockout-bracket";
+import {
+  ANNEX_C_ROWS,
+  ANNEX_C_WINNERS,
+} from "@/lib/tournament/third-place-annex-c";
 import { normalizeTeamCode } from "@/lib/tournament/team-codes";
 import type { Match, Team, TournamentRound } from "@/lib/types";
+
+const thirdPlaceLookup = buildThirdPlaceLookup();
 
 const knockoutRoundOrder: TournamentRound[] = [
   "round_of_32",
@@ -163,6 +171,22 @@ function getTeamAtRank(
   return row ? normalizeTeamCode(row.teamCode) : null;
 }
 
+function buildThirdPlaceLookup() {
+  const lookup = new Map<string, Record<string, GroupCategory>>();
+
+  for (const letters of ANNEX_C_ROWS) {
+    const byWinner: Record<string, GroupCategory> = {};
+
+    for (let index = 0; index < ANNEX_C_WINNERS.length; index += 1) {
+      byWinner[ANNEX_C_WINNERS[index]!] = letters[index] as GroupCategory;
+    }
+
+    lookup.set([...letters].sort().join(""), byWinner);
+  }
+
+  return lookup;
+}
+
 function buildThirdPlaceAssignments(
   matches: Match[],
   standings: GroupStandings[],
@@ -174,7 +198,18 @@ function buildThirdPlaceAssignments(
   }
 
   const qualifiedThirds = getQualifiedThirdPlaceTeams(standings);
-  const assigned = new Set<string>();
+  const thirdByGroup = new Map<GroupCategory, QualifiedThirdPlaceTeam>(
+    qualifiedThirds.map((entry) => [entry.groupCode, entry]),
+  );
+  const combinationKey = qualifiedThirds
+    .map((entry) => entry.groupCode)
+    .sort()
+    .join("");
+  const thirdGroupByWinner = thirdPlaceLookup.get(combinationKey);
+
+  if (!thirdGroupByWinner) {
+    return assignments;
+  }
 
   const roundOf32Matches = matches
     .filter((match) => match.round === "round_of_32")
@@ -186,29 +221,37 @@ function buildThirdPlaceAssignments(
   for (const match of roundOf32Matches) {
     for (const side of ["home", "away"] as const) {
       const slot = side === "home" ? match.home_slot : match.away_slot;
-      const thirdPlaceSlot = slot?.match(/^3([A-L]+)$/);
 
-      if (!thirdPlaceSlot) {
+      if (!slot?.startsWith("3")) {
         continue;
       }
 
-      const eligibleGroups = thirdPlaceSlot[1].split("");
-      const candidate = qualifiedThirds.find(
-        (entry) =>
-          !assigned.has(entry.teamCode) &&
-          eligibleGroups.includes(entry.groupCode),
-      );
+      const winnerGroup = getFixedWinnerGroup(match, side);
 
-      if (!candidate) {
+      if (!winnerGroup) {
         continue;
       }
 
-      assignments.set(`${match.id}:${side}`, candidate.teamCode);
-      assigned.add(candidate.teamCode);
+      const thirdGroup = thirdGroupByWinner[winnerGroup];
+      const thirdTeam = thirdByGroup.get(thirdGroup)?.teamCode;
+
+      if (!thirdTeam) {
+        continue;
+      }
+
+      assignments.set(`${match.id}:${side}`, thirdTeam);
     }
   }
 
   return assignments;
+}
+
+function getFixedWinnerGroup(match: Match, thirdPlaceSide: "home" | "away") {
+  const winnerSlot =
+    thirdPlaceSide === "home" ? match.away_slot : match.home_slot;
+  const winnerGroup = winnerSlot?.match(/^1([A-L])$/)?.[1];
+
+  return winnerGroup ?? null;
 }
 
 function slotToMatchId(slotLabel: string) {
