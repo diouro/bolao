@@ -1,10 +1,9 @@
-import {
-  getFootballDataApiToken,
-  getFootballDataSeason,
-} from "@/lib/env";
+import { getFootballDataApiToken, getFootballDataSeason } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { enrichMatchesWithBracketTeams } from "@/lib/tournament/resolve-bracket";
+import { getTeams } from "@/lib/tournament/load-fixtures";
 import { normalizeTeamCode } from "@/lib/tournament/team-codes";
-import type { Match, MatchStatus } from "@/lib/types";
+import type { Match, MatchStatus, TournamentRound } from "@/lib/types";
 import type {
   MatchResult,
   ResultsProvider,
@@ -24,6 +23,7 @@ type FootballDataMatch = {
   id: number;
   utcDate: string;
   status: string;
+  stage?: string | null;
   homeTeam: FootballDataTeam;
   awayTeam: FootballDataTeam;
   score: {
@@ -85,6 +85,11 @@ export class FootballDataResultsProvider implements ResultsProvider {
       throw new Error(error.message);
     }
 
+    const resolvedLocalMatches = enrichMatchesWithBracketTeams(
+      (localMatches ?? []) as Match[],
+      getTeams()
+    );
+
     let updated = 0;
     let skipped = 0;
 
@@ -96,7 +101,7 @@ export class FootballDataResultsProvider implements ResultsProvider {
         continue;
       }
 
-      const localMatch = findLocalMatch(remoteMatch, (localMatches ?? []) as Match[]);
+      const localMatch = findLocalMatch(remoteMatch, resolvedLocalMatches);
 
       if (!localMatch) {
         skipped += 1;
@@ -153,14 +158,16 @@ export class FootballDataResultsProvider implements ResultsProvider {
     });
 
     const data = await this.fetchFootballData<{ matches: FootballDataMatch[] }>(
-      `/competitions/WC/matches?${params.toString()}`,
+      `/competitions/WC/matches?${params.toString()}`
     );
 
     return data.matches ?? [];
   }
 
   private async fetchMatch(externalMatchId: string) {
-    return this.fetchFootballData<FootballDataMatch>(`/matches/${externalMatchId}`);
+    return this.fetchFootballData<FootballDataMatch>(
+      `/matches/${externalMatchId}`
+    );
   }
 
   private async fetchFootballData<T>(path: string) {
@@ -168,7 +175,7 @@ export class FootballDataResultsProvider implements ResultsProvider {
 
     if (!token) {
       throw new Error(
-        "FOOTBALL_DATA_API_TOKEN is not configured. Add it to .env.local or .env.production.",
+        "FOOTBALL_DATA_API_TOKEN is not configured. Add it to .env.local or .env.production."
       );
     }
 
@@ -181,7 +188,9 @@ export class FootballDataResultsProvider implements ResultsProvider {
 
     if (!response.ok) {
       const message = await response.text();
-      throw new Error(`football-data.org request failed: ${response.status} ${message}`);
+      throw new Error(
+        `football-data.org request failed: ${response.status} ${message}`
+      );
     }
 
     return (await response.json()) as T;
@@ -195,7 +204,7 @@ type ParsedRemoteMatch = {
 };
 
 function parseRemoteMatch(
-  remoteMatch: FootballDataMatch,
+  remoteMatch: FootballDataMatch
 ): ParsedRemoteMatch | null {
   const score = extractScore(remoteMatch);
 
@@ -240,14 +249,10 @@ function extractScore(remoteMatch: FootballDataMatch): {
       regularTime?.home != null && regularTime?.away != null
         ? regularTime
         : halfTime?.home != null && halfTime?.away != null
-          ? halfTime
-          : null;
+        ? halfTime
+        : null;
 
-    if (
-      liveScore &&
-      liveScore.home != null &&
-      liveScore.away != null
-    ) {
+    if (liveScore && liveScore.home != null && liveScore.away != null) {
       return {
         homeScore: liveScore.home,
         awayScore: liveScore.away,
@@ -283,7 +288,7 @@ function findLocalMatch(remoteMatch: FootballDataMatch, localMatches: Match[]) {
   const byExternalId = localMatches.find(
     (match) =>
       match.external_provider === providerName &&
-      match.external_match_id === externalId,
+      match.external_match_id === externalId
   );
 
   if (byExternalId) {
@@ -297,7 +302,7 @@ function findLocalMatch(remoteMatch: FootballDataMatch, localMatches: Match[]) {
     (match) =>
       match.external_home_team_id === stringifyId(remoteMatch.homeTeam.id) &&
       match.external_away_team_id === stringifyId(remoteMatch.awayTeam.id) &&
-      nearKickoff(match.kickoff_at, remoteMatch.utcDate),
+      nearKickoff(match.kickoff_at, remoteMatch.utcDate)
   );
 
   if (byExternalTeamIds) {
@@ -310,11 +315,21 @@ function findLocalMatch(remoteMatch: FootballDataMatch, localMatches: Match[]) {
 
   const candidates = localMatches.filter(
     (match) =>
-      match.home_team_code === homeCode &&
-      match.away_team_code === awayCode,
+      match.home_team_code === homeCode && match.away_team_code === awayCode
   );
 
   if (candidates.length === 0) {
+    const remoteRound = mapRemoteRound(remoteMatch.stage);
+    const kickoffMatches = localMatches.filter(
+      (match) =>
+        match.round === remoteRound &&
+        nearKickoff(match.kickoff_at, remoteMatch.utcDate)
+    );
+
+    if (kickoffMatches.length === 1) {
+      return kickoffMatches[0]!;
+    }
+
     return null;
   }
 
@@ -324,20 +339,59 @@ function findLocalMatch(remoteMatch: FootballDataMatch, localMatches: Match[]) {
 
   const remoteKickoff = new Date(remoteMatch.utcDate).getTime();
 
-  return candidates
-    .map((match) => ({
-      match,
-      distance: Math.abs(new Date(match.kickoff_at).getTime() - remoteKickoff),
-    }))
-    .sort((a, b) => a.distance - b.distance)[0]?.match ?? null;
+  return (
+    candidates
+      .map((match) => ({
+        match,
+        distance: Math.abs(
+          new Date(match.kickoff_at).getTime() - remoteKickoff
+        ),
+      }))
+      .sort((a, b) => a.distance - b.distance)[0]?.match ?? null
+  );
+}
+
+function mapRemoteRound(stage?: string | null): TournamentRound | null {
+  const normalized = String(stage ?? "").toUpperCase();
+
+  if (normalized === "LAST_32") {
+    return "round_of_32";
+  }
+
+  if (normalized === "LAST_16") {
+    return "round_of_16";
+  }
+
+  if (normalized === "QUARTER_FINALS") {
+    return "quarter_final";
+  }
+
+  if (normalized === "SEMI_FINALS") {
+    return "semi_final";
+  }
+
+  if (normalized === "THIRD_PLACE") {
+    return "third_place";
+  }
+
+  if (normalized === "FINAL") {
+    return "final";
+  }
+
+  if (normalized === "GROUP_STAGE") {
+    return "group";
+  }
+
+  return null;
 }
 
 function nearKickoff(localKickoff: string, remoteKickoff: string) {
   const oneDayMs = 24 * 60 * 60 * 1000;
 
   return (
-    Math.abs(new Date(localKickoff).getTime() - new Date(remoteKickoff).getTime()) <
-    oneDayMs
+    Math.abs(
+      new Date(localKickoff).getTime() - new Date(remoteKickoff).getTime()
+    ) < oneDayMs
   );
 }
 
